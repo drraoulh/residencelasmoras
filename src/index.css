@@ -1,30 +1,84 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap');
 @import "tailwindcss";
 
 @theme {
-  --color-brand-red: #D50000;
+  --color-brand-red: #C41E1E;
+  --color-brand-red-dark: #A01818;
   --color-brand-white: #FFFFFF;
-  --color-brand-dark: #111111;
-  --color-brand-gray: #F8F9FA;
-  --font-sans: 'Inter', sans-serif;
+  --color-brand-dark: #1A1A1A;
+  --color-brand-gray: #F5F5F4;
+  --color-brand-muted: #78716C;
+  --color-brand-border: #E7E5E4;
+  --font-sans: 'Inter', system-ui, sans-serif;
 }
 
 @layer base {
+  html {
+    scroll-behavior: auto;
+  }
+
   body {
-    @apply bg-brand-white text-brand-dark font-sans antialiased selection:bg-brand-red selection:text-white;
+    @apply bg-brand-white text-brand-dark font-sans antialiased;
   }
 }
 
 @layer components {
-  .btn-primary {
-    @apply bg-brand-red text-white px-6 py-3 rounded-lg font-medium transition-all duration-300 hover:bg-red-700 hover:shadow-lg active:scale-95 flex items-center justify-center gap-2;
-  }
-  
-  .btn-secondary {
-    @apply bg-brand-gray text-brand-dark px-6 py-3 rounded-lg font-medium border border-gray-200 transition-all duration-300 hover:bg-gray-200 active:scale-95 flex items-center justify-center gap-2;
+  /* ── Glass ── */
+  .glass {
+    @apply border border-white/40 bg-white/60 backdrop-blur-2xl;
   }
 
-  .premium-card {
-    @apply bg-white rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-gray-100 overflow-hidden hover:shadow-[0_8px_30px_rgb(0,0,0,0.12)] transition-shadow duration-300;
+  .glass-dark {
+    @apply border border-white/10 bg-black/30 backdrop-blur-2xl;
+  }
+
+  .glass-card {
+    @apply rounded-2xl border border-stone-200/60 bg-white/70 shadow-[0_8px_32px_rgba(0,0,0,0.04)] backdrop-blur-xl;
+  }
+
+  .glass-on-image {
+    @apply rounded-2xl border border-white/20 bg-black/25 px-6 py-5 text-white shadow-[0_8px_32px_rgba(0,0,0,0.2)] backdrop-blur-2xl;
+  }
+
+  /* ── Buttons ── */
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 rounded-full bg-brand-dark px-6 py-3 text-sm font-medium text-white transition hover:bg-black active:scale-[0.98];
+  }
+
+  .btn-accent {
+    @apply inline-flex items-center justify-center gap-2 rounded-full bg-brand-red px-6 py-3 text-sm font-medium text-white transition hover:bg-brand-red-dark active:scale-[0.98];
+  }
+
+  .btn-ghost {
+    @apply inline-flex items-center justify-center gap-2 rounded-full border border-stone-300/80 bg-white/50 px-6 py-3 text-sm font-medium text-brand-dark backdrop-blur-sm transition hover:bg-white active:scale-[0.98];
+  }
+
+  .btn-glass {
+    @apply inline-flex items-center justify-center gap-2 rounded-full border border-white/30 bg-white/15 px-6 py-3 text-sm font-medium text-white backdrop-blur-md transition hover:bg-white/25 active:scale-[0.98];
+  }
+
+  .btn-secondary {
+    @apply inline-flex items-center justify-center gap-2 rounded-full border border-stone-300/80 bg-white/50 px-6 py-3 text-sm font-medium text-brand-dark backdrop-blur-sm transition hover:bg-white active:scale-[0.98];
+  }
+
+  .btn-dark {
+    @apply inline-flex items-center justify-center gap-2 rounded-full bg-brand-dark px-6 py-3 text-sm font-medium text-white transition hover:bg-black active:scale-[0.98];
+  }
+
+  /* ── Layout ── */
+  .section-label {
+    @apply text-[11px] font-medium uppercase tracking-[0.3em] text-brand-muted;
+  }
+
+  .section-title {
+    @apply text-2xl font-medium leading-snug tracking-tight text-brand-dark sm:text-3xl md:text-4xl;
+  }
+
+  .form-input {
+    @apply h-11 w-full rounded-xl border border-stone-200/80 bg-white/80 px-4 text-sm font-normal text-brand-dark outline-none backdrop-blur-sm transition placeholder:text-stone-400 focus:border-brand-red/40 focus:bg-white focus:ring-2 focus:ring-brand-red/20;
+  }
+
+  .text-on-image {
+    @apply text-white drop-shadow-[0_1px_8px_rgba(0,0,0,0.5)];
   }
 }
