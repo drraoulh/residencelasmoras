@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Car, Search, ShieldCheck, Wifi, Wind } from 'lucide-react';
 import LogementCard from '../../components/properties/LogementCard';
-import type { Logement } from '../../components/properties/LogementCard';
+import { useLocalStorageStore } from '../../hooks/useLocalStorageStore';
 import lamorasResidence from '../../assets/lamorasresidence.jpeg';
 import lasmoras from '../../assets/lasmoras.jpeg';
 import lasmorasResidence from '../../assets/lasmorasresidence.jpeg';
@@ -23,60 +23,26 @@ const heroSlides = [
   lasmoras,
 ];
 
-const logementsEnAvant: Logement[] = [
-  {
-    id: '101',
-    nom: 'Suite VIP Bastos',
-    type: 'Appartement',
-    surface: 150,
-    prix_nuit: 100000,
-    statut_actuel: 'disponible',
-    photos: [residenceLasMoras1],
-    equipements: ['Climatisation', 'Wi-Fi Fibre', 'Piscine'],
-  },
-  {
-    id: '102',
-    nom: 'Appartement Premium Centre',
-    type: 'Appartement',
-    surface: 110,
-    prix_nuit: 85000,
-    statut_actuel: 'disponible',
-    photos: [residenceLasMoras2],
-    equipements: ['Smart TV', 'Cuisine équipée', 'Parking sécurisé'],
-  },
-  {
-    id: '103',
-    nom: 'Résidence Executive Golf',
-    type: 'Villa',
-    surface: 240,
-    prix_nuit: 180000,
-    statut_actuel: 'libere_prochainement',
-    date_liberation: '2026-06-20',
-    photos: [residenceLasMoras3],
-    equipements: ['Jardin privé', 'Gardien 24/7', 'Terrasse'],
-  },
-];
-
 const services = [
   {
     icon: Wifi,
-    title: 'Wifi Haut Débit',
+    title: 'Wifi haut debit',
     text: 'Connexion fibre stable pour travailler, streamer et rester joignable.',
   },
   {
     icon: ShieldCheck,
-    title: 'Sécurité 24/7',
-    text: 'Accès contrôlé, vidéosurveillance et présence sur site jour et nuit.',
+    title: 'Securite 24/7',
+    text: 'Acces controle, videosurveillance et presence sur site jour et nuit.',
   },
   {
     icon: Car,
-    title: 'Parking Sécurisé',
-    text: 'Stationnement privé et surveillé pour vos véhicules.',
+    title: 'Parking securise',
+    text: 'Stationnement prive et surveille pour vos vehicules.',
   },
   {
     icon: Wind,
     title: 'Climatisation',
-    text: 'Pièces fraîches et confortables avec équipements modernes.',
+    text: 'Pieces fraiches et confortables avec equipements modernes.',
   },
 ];
 
@@ -85,7 +51,7 @@ function BookingFields() {
     <div className="grid grid-cols-1 gap-4 md:grid-cols-[1fr_1fr_1fr_auto] md:items-end">
       <div>
         <label className="mb-2 block text-xs font-bold uppercase tracking-widest text-gray-500">
-          Arrivée
+          Arrivee
         </label>
         <input
           type="date"
@@ -94,7 +60,7 @@ function BookingFields() {
       </div>
       <div>
         <label className="mb-2 block text-xs font-bold uppercase tracking-widest text-gray-500">
-          Départ
+          Depart
         </label>
         <input
           type="date"
@@ -118,7 +84,7 @@ function BookingFields() {
         className="inline-flex h-12 items-center justify-center gap-2 rounded-lg bg-brand-red px-8 font-bold text-white transition hover:bg-red-700 hover:shadow-lg active:scale-95"
       >
         <Search className="h-5 w-5" />
-        Réserver
+        Reserver
       </Link>
     </div>
   );
@@ -126,6 +92,8 @@ function BookingFields() {
 
 export default function Home() {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const { logements } = useLocalStorageStore();
+  const logementsEnAvant = logements.slice(0, 3);
 
   useEffect(() => {
     const timer = window.setInterval(() => {
@@ -154,13 +122,14 @@ export default function Home() {
 
         <div className="relative z-10 mx-auto max-w-5xl px-4 text-center text-white">
           <p className="mb-4 text-xs font-bold uppercase tracking-[0.22em] text-white/85 sm:text-sm sm:tracking-[0.28em]">
-            Résidence Las Moras
+            Residence Las Moras
           </p>
           <h1 className="text-3xl font-extrabold leading-tight drop-shadow-2xl sm:text-4xl md:text-6xl">
-            Votre séjour d'exception à Yaoundé
+            Votre sejour d'exception a Yaounde
           </h1>
           <p className="mx-auto mt-5 max-w-3xl text-base font-medium leading-relaxed text-gray-100 sm:text-lg md:text-2xl">
-            Appartements meublés de standing, service attentif et confort premium pour vos séjours d'affaires ou en famille.
+            Appartements meubles de standing, service attentif et confort premium pour vos sejours
+            d'affaires ou en famille.
           </p>
         </div>
 
@@ -197,10 +166,11 @@ export default function Home() {
             Bienvenue
           </p>
           <h2 className="text-2xl font-extrabold leading-tight text-brand-dark sm:text-3xl md:text-5xl">
-            L'Excellence au cœur de la ville
+            L'Excellence au coeur de la ville
           </h2>
           <p className="mt-6 text-base leading-relaxed text-gray-600 md:mt-8 md:text-xl">
-            Profitez d'appartements meublés élégants, pensés pour offrir le confort d'un hôtel premium avec l'intimité d'une résidence privée. Chaque logement combine espace, standing et équipements modernes.
+            Profitez d'appartements meubles elegants, penses pour offrir le confort d'un hotel
+            premium avec l'intimite d'une residence privee.
           </p>
         </div>
       </section>
@@ -210,10 +180,10 @@ export default function Home() {
           <div className="mb-10 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
             <div>
               <p className="mb-2 text-sm font-bold uppercase tracking-[0.25em] text-brand-red">
-                Sélection
+                Selection
               </p>
               <h2 className="text-2xl font-extrabold text-brand-dark sm:text-3xl md:text-4xl">
-                Nos Coups de Cœur
+                Nos coups de coeur
               </h2>
             </div>
             <Link to="/catalogue" className="font-bold text-brand-red transition hover:text-red-700">
@@ -236,7 +206,7 @@ export default function Home() {
               Services
             </p>
             <h2 className="text-2xl font-extrabold text-brand-dark sm:text-3xl md:text-4xl">
-              Nos Services
+              Nos services
             </h2>
           </div>
 

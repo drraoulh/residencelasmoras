@@ -1,87 +1,132 @@
-import { Home, CheckCircle, XCircle, Clock } from 'lucide-react';
-
-const mockReservations = [
-  { id: 1, nom: 'Jean Dupont', logement: 'Appartement VIP Bastos', dates: '10 - 15 Juin 2026', statut: 'En attente' },
-  { id: 2, nom: 'Marie Claire', logement: 'Studio Premium Golf', dates: '12 - 14 Juin 2026', statut: 'Confirmée' },
-  { id: 3, nom: 'Paul Atangana', logement: 'Villa Océan Omnisport', dates: '20 - 30 Juin 2026', statut: 'En attente' },
-  { id: 4, nom: 'Sarah Mvondo', logement: 'Chambre Executive', dates: '05 - 08 Juil 2026', statut: 'Annulée' },
-  { id: 5, nom: 'Luc Eto', logement: 'Appartement VIP Bastos', dates: '01 - 10 Août 2026', statut: 'Confirmée' },
-];
+import { Banknote, Building2, CalendarCheck, Home, Inbox } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { useLocalStorageStore } from '../../hooks/useLocalStorageStore';
 
 export default function Dashboard() {
+  const { logements, messages, reservations } = useLocalStorageStore();
+
+  const occupiedCount = logements.filter((logement) => logement.statut === 'occupe').length;
+  const unreadMessages = messages.filter((message) => !message.lu).length;
+  const activeReservations = reservations.filter(
+    (reservation) =>
+      reservation.statutReservation === 'confirmee' || reservation.statutReservation === 'en_cours',
+  );
+  const paidRevenue = reservations
+    .filter((reservation) => reservation.statutReservation !== 'annulee')
+    .reduce((total, reservation) => total + reservation.montantPaye, 0);
+
+  const upcomingArrivals = [...reservations]
+    .filter((reservation) => reservation.statutReservation !== 'annulee')
+    .sort((a, b) => a.dateArrivee.localeCompare(b.dateArrivee))
+    .slice(0, 5);
+
+  const kpis = [
+    { label: 'Total logements', value: logements.length, icon: Home, color: 'bg-gray-50 text-brand-dark' },
+    { label: 'Réservations actives', value: activeReservations.length, icon: CalendarCheck, color: 'bg-green-50 text-green-700' },
+    { label: 'Logements occupés', value: occupiedCount, icon: Building2, color: 'bg-red-50 text-brand-red' },
+    { label: 'Messages non lus', value: unreadMessages, icon: Inbox, color: 'bg-blue-50 text-blue-700' },
+  ];
+
   return (
-    <div className="max-w-6xl mx-auto">
-      <h1 className="text-3xl font-extrabold text-brand-dark mb-10 tracking-tight">Vue d'ensemble</h1>
-
-      {/* Cartes Statistiques Rapides */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
-        <div className="bg-white p-6 rounded-3xl shadow-[0_4px_20px_rgb(0,0,0,0.03)] border border-gray-100 flex items-center gap-5">
-          <div className="p-4 bg-gray-50 rounded-2xl text-gray-700"><Home className="w-8 h-8" /></div>
-          <div>
-            <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Total Logements</p>
-            <p className="text-3xl font-black text-brand-dark">12</p>
-          </div>
+    <div className="mx-auto max-w-7xl">
+      <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <h1 className="text-3xl font-extrabold tracking-tight text-brand-dark">Tableau de bord</h1>
+          <p className="mt-2 text-sm font-medium text-gray-500">
+            Vue rapide des logements, réservations, paiements et messages.
+          </p>
         </div>
-        
-        <div className="bg-white p-6 rounded-3xl shadow-[0_4px_20px_rgb(0,0,0,0.03)] border border-gray-100 flex items-center gap-5">
-          <div className="p-4 bg-green-50 rounded-2xl text-green-600"><CheckCircle className="w-8 h-8" /></div>
-          <div>
-            <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Disponibles</p>
-            <p className="text-3xl font-black text-brand-dark">8</p>
-          </div>
+        <div className="flex flex-wrap gap-3">
+          <Link to="/admin/reservations" className="rounded-lg bg-brand-red px-4 py-3 text-sm font-bold text-white transition hover:bg-red-700">
+            Nouvelle réservation
+          </Link>
+          <Link to="/admin/disponibilites" className="rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm font-bold text-gray-700 transition hover:bg-gray-50">
+            Voir disponibilités
+          </Link>
         </div>
+      </div>
 
-        <div className="bg-white p-6 rounded-3xl shadow-[0_4px_20px_rgb(0,0,0,0.03)] border border-gray-100 flex items-center gap-5">
-          <div className="p-4 bg-red-50 rounded-2xl text-brand-red"><XCircle className="w-8 h-8" /></div>
-          <div>
-            <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Occupés</p>
-            <p className="text-3xl font-black text-brand-dark">4</p>
+      <div className="mb-8 grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-4">
+        {kpis.map(({ label, value, icon: Icon, color }) => (
+          <div key={label} className="rounded-lg border border-gray-100 bg-white p-6 shadow-sm">
+            <div className="flex items-center gap-4">
+              <div className={`flex h-12 w-12 items-center justify-center rounded-lg ${color}`}>
+                <Icon className="h-6 w-6" />
+              </div>
+              <div>
+                <p className="text-xs font-bold uppercase tracking-widest text-gray-500">{label}</p>
+                <p className="mt-1 text-3xl font-black text-brand-dark">{value}</p>
+              </div>
+            </div>
           </div>
-        </div>
+        ))}
+      </div>
 
-        <div className="bg-white p-6 rounded-3xl shadow-[0_4px_20px_rgb(0,0,0,0.03)] border border-gray-100 flex items-center gap-5">
-          <div className="p-4 bg-orange-50 rounded-2xl text-orange-500"><Clock className="w-8 h-8" /></div>
+      <div className="mb-8 rounded-lg border border-gray-100 bg-white p-6 shadow-sm">
+        <div className="flex items-center gap-4">
+          <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-green-50 text-green-700">
+            <Banknote className="h-6 w-6" />
+          </div>
           <div>
-            <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Demandes (Attente)</p>
-            <p className="text-3xl font-black text-brand-dark">3</p>
+            <p className="text-xs font-bold uppercase tracking-widest text-gray-500">Total encaissé</p>
+            <p className="mt-1 text-3xl font-black text-brand-dark">
+              {paidRevenue.toLocaleString('fr-FR')} FCFA
+            </p>
           </div>
         </div>
       </div>
 
-      {/* Tableau des Dernières Réservations */}
-      <div className="bg-white rounded-3xl shadow-[0_4px_20px_rgb(0,0,0,0.03)] border border-gray-100 overflow-hidden">
-        <div className="p-8 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
-          <h2 className="text-xl font-bold text-brand-dark">Dernières demandes de réservation</h2>
+      <div className="grid gap-6 lg:grid-cols-2">
+        <div className="overflow-hidden rounded-lg border border-gray-100 bg-white shadow-sm">
+          <div className="flex items-center justify-between border-b border-gray-100 bg-gray-50 px-6 py-5">
+            <h2 className="text-xl font-extrabold text-brand-dark">Prochaines arrivées</h2>
+            <Link to="/admin/reservations" className="text-sm font-bold text-brand-red">Gérer</Link>
+          </div>
+          <div className="divide-y divide-gray-100">
+            {upcomingArrivals.map((reservation) => {
+              const logement = logements.find((item) => item.id === reservation.logementId);
+              return (
+                <div key={reservation.id} className="px-6 py-4">
+                  <div className="flex items-start justify-between gap-4">
+                    <div>
+                      <p className="font-bold text-brand-dark">{reservation.clientNom}</p>
+                      <p className="mt-1 text-sm text-gray-500">{logement?.nom} - {reservation.clientTelephone}</p>
+                    </div>
+                    <p className="text-sm font-bold text-gray-700">
+                      {new Date(reservation.dateArrivee).toLocaleDateString('fr-FR')}
+                    </p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         </div>
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="bg-white text-gray-400 text-xs uppercase tracking-widest border-b border-gray-100">
-                <th className="px-8 py-5 font-bold">Client</th>
-                <th className="px-8 py-5 font-bold">Logement</th>
-                <th className="px-8 py-5 font-bold">Dates</th>
-                <th className="px-8 py-5 font-bold">Statut</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-50">
-              {mockReservations.map((res) => (
-                <tr key={res.id} className="hover:bg-gray-50/50 transition-colors">
-                  <td className="px-8 py-5 font-bold text-brand-dark text-sm">{res.nom}</td>
-                  <td className="px-8 py-5 text-gray-600 font-medium text-sm">{res.logement}</td>
-                  <td className="px-8 py-5 text-gray-500 text-sm">{res.dates}</td>
-                  <td className="px-8 py-5">
-                    <span className={`px-4 py-1.5 rounded-lg text-xs font-bold ${
-                      res.statut === 'Confirmée' ? 'bg-green-100 text-green-700' :
-                      res.statut === 'En attente' ? 'bg-orange-100 text-orange-700' :
-                      'bg-red-100 text-red-700'
-                    }`}>
-                      {res.statut}
+
+        <div className="overflow-hidden rounded-lg border border-gray-100 bg-white shadow-sm">
+          <div className="flex items-center justify-between border-b border-gray-100 bg-gray-50 px-6 py-5">
+            <h2 className="text-xl font-extrabold text-brand-dark">Derniers messages</h2>
+            <Link to="/admin/contacts" className="text-sm font-bold text-brand-red">Ouvrir</Link>
+          </div>
+          <div className="divide-y divide-gray-100">
+            {messages.slice(0, 5).map((message) => (
+              <div key={message.id} className="px-6 py-4">
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <p className="font-bold text-brand-dark">{message.sujet}</p>
+                    <p className="mt-1 text-sm text-gray-500">{message.nom} - {message.email}</p>
+                  </div>
+                  {!message.lu && (
+                    <span className="rounded-lg bg-red-50 px-2.5 py-1 text-xs font-bold text-brand-red">
+                      Non lu
                     </span>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                  )}
+                </div>
+              </div>
+            ))}
+            {messages.length === 0 && (
+              <p className="px-6 py-8 text-center text-sm font-medium text-gray-500">Aucun message.</p>
+            )}
+          </div>
         </div>
       </div>
     </div>
