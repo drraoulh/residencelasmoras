@@ -16,6 +16,9 @@ export function useLogements() {
       if (error) throw error;
       return data as Logement[];
     },
+    staleTime: 60_000,
+    refetchInterval: 5 * 60_000,
+    refetchIntervalInBackground: false,
   });
 
   const addLogement = useMutation({

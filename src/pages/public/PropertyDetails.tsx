@@ -1,11 +1,18 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import type { FormEvent } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { Link, useParams, useSearchParams } from 'react-router-dom';
-import { ArrowLeft, Car, Coffee, MapPin, Shield, Tv, Wifi, Wind } from 'lucide-react';
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import { ArrowLeft, Car, Coffee, MapPin, Shield, Sparkles, Tv, Wifi, Wind } from 'lucide-react';
+import UnavailableAlternativesModal from '../../components/booking/UnavailableAlternativesModal';
 import { useAvailabilitySlots } from '../../hooks/useAvailabilitySlots';
 import { useLogements } from '../../hooks/useLogements';
-import { formatDateFr, formatSearchPeriod, getLogementAvailability } from '../../utils/availability';
+import { findAvailableLogements } from '../../utils/planning';
+import {
+  formatSearchPeriod,
+  getLogementAvailability,
+  getUnavailableMessage,
+} from '../../utils/availability';
+import { ReservationUnavailableError } from '../../utils/reservationRequest';
 import { buildConfirmUrl, buildReservationRef } from '../../utils/confirmReservation';
 import { createReservationRequest } from '../../utils/reservationRequest';
 import { openReservationWhatsApp } from '../../utils/whatsapp';
@@ -31,14 +38,17 @@ const initialBookingForm = {
 
 export default function PropertyDetails() {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { logements } = useLogements();
   const queryClient = useQueryClient();
   const { slots } = useAvailabilitySlots();
+  const arriveeInputRef = useRef<HTMLInputElement>(null);
   const [bookingForm, setBookingForm] = useState(initialBookingForm);
   const [sent, setSent] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState('');
+  const [showAlternatives, setShowAlternatives] = useState(false);
   const property = logements.find((logement) => logement.id === id);
 
   const urlArrivee = searchParams.get('arrivee') ?? '';
@@ -54,11 +64,21 @@ export default function PropertyDetails() {
     }
   }, [urlArrivee, urlDepart]);
 
-  const periodAvailability = useMemo(() => {
-    if (!property || !urlArrivee) return null;
-    if (urlDepart && urlDepart <= urlArrivee) return null;
-    return getLogementAvailability(property, slots, urlArrivee, urlDepart || undefined);
-  }, [property, slots, urlArrivee, urlDepart]);
+  const bookingAvailability = useMemo(() => {
+    if (!property) return null;
+    const arrivee = bookingForm.dateArrivee || urlArrivee;
+    const depart = bookingForm.dateDepart || urlDepart;
+    if (!arrivee) return null;
+    if (depart && depart <= arrivee) return null;
+    return getLogementAvailability(property, slots, arrivee, depart || undefined);
+  }, [
+    property,
+    slots,
+    bookingForm.dateArrivee,
+    bookingForm.dateDepart,
+    urlArrivee,
+    urlDepart,
+  ]);
 
   if (!property) {
     return (
@@ -75,9 +95,28 @@ export default function PropertyDetails() {
   const weeklyPrice = property.prix * 6;
   const monthlyPrice = property.prix * 25;
   const isUnavailableByStatut = property.statut === 'occupe' || property.statut === 'maintenance';
-  const isUnavailable = periodAvailability
-    ? !periodAvailability.available
-    : isUnavailableByStatut;
+  const hasBookingDates = Boolean(bookingForm.dateArrivee || urlArrivee);
+  const isUnavailable = bookingAvailability
+    ? !bookingAvailability.available
+    : hasBookingDates
+      ? false
+      : isUnavailableByStatut;
+
+  const alternatives = useMemo(() => {
+    const arrivee = bookingForm.dateArrivee || urlArrivee;
+    const depart = bookingForm.dateDepart || urlDepart;
+    if (!property || !arrivee || bookingAvailability?.available) return [];
+    return findAvailableLogements(logements, slots, arrivee, depart || undefined, property.id);
+  }, [
+    bookingAvailability?.available,
+    bookingForm.dateArrivee,
+    bookingForm.dateDepart,
+    logements,
+    property,
+    slots,
+    urlArrivee,
+    urlDepart,
+  ]);
 
   const galleryPhotos = property.photos.length >= 4
     ? property.photos.slice(0, 4)
@@ -93,6 +132,18 @@ export default function PropertyDetails() {
 
     if (!bookingForm.dateArrivee) return;
     if (bookingForm.dateDepart && bookingForm.dateDepart <= bookingForm.dateArrivee) return;
+
+    const liveAvailability = getLogementAvailability(
+      property,
+      slots,
+      bookingForm.dateArrivee,
+      bookingForm.dateDepart || undefined,
+    );
+    if (!liveAvailability.available) {
+      setSubmitError(getUnavailableMessage(liveAvailability));
+      setShowAlternatives(true);
+      return;
+    }
 
     setSubmitting(true);
     try {
@@ -125,8 +176,12 @@ export default function PropertyDetails() {
         reservationRef: buildReservationRef(result.id),
       });
       setSent(true);
-    } catch {
-      setSubmitError('Enregistrement impossible. Réessayez ou contactez-nous par téléphone.');
+    } catch (err) {
+      setSubmitError(
+        err instanceof ReservationUnavailableError
+          ? err.message
+          : 'Enregistrement impossible. Réessayez ou contactez-nous par téléphone.',
+      );
     } finally {
       setSubmitting(false);
     }
@@ -267,17 +322,34 @@ export default function PropertyDetails() {
 
               <h3 className="mb-6 text-xl font-bold text-brand-dark">Demande de réservation</h3>
 
-              {periodAvailability?.available && urlArrivee && (
+              {bookingAvailability?.available && hasBookingDates && (
                 <div className="mb-5 rounded-xl bg-green-50 px-4 py-3 text-sm font-semibold text-green-700 ring-1 ring-green-100">
-                  Disponible — {formatSearchPeriod(urlArrivee, urlDepart || undefined)}.
+                  Disponible —{' '}
+                  {formatSearchPeriod(
+                    bookingForm.dateArrivee || urlArrivee,
+                    bookingForm.dateDepart || urlDepart || undefined,
+                  )}
+                  .
                 </div>
               )}
 
               {isUnavailable && (
                 <div className="mb-5 rounded-xl bg-orange-50 px-4 py-3 text-sm font-semibold text-orange-700 ring-1 ring-orange-100">
-                  {periodAvailability?.nextAvailableFrom
-                    ? `Indisponible sur cette période. Prochaine disponibilité à partir du ${formatDateFr(periodAvailability.nextAvailableFrom)}.`
-                    : 'Ce logement est actuellement indisponible. Contactez-nous pour connaître les prochaines dates libres.'}
+                  <p>
+                    {bookingAvailability
+                      ? getUnavailableMessage(bookingAvailability)
+                      : 'Ce logement est actuellement indisponible. Contactez-nous pour connaître les prochaines dates libres.'}
+                  </p>
+                  {bookingAvailability && (
+                    <button
+                      type="button"
+                      onClick={() => setShowAlternatives(true)}
+                      className="mt-3 inline-flex items-center gap-1.5 text-sm font-semibold text-brand-red hover:underline"
+                    >
+                      <Sparkles className="h-4 w-4" />
+                      Voir les logements disponibles
+                    </button>
+                  )}
                 </div>
               )}
 
@@ -304,7 +376,6 @@ export default function PropertyDetails() {
                     placeholder="Prénom"
                     className="form-input"
                     required
-                    disabled={isUnavailable}
                   />
                   <input
                     value={bookingForm.nom}
@@ -315,7 +386,6 @@ export default function PropertyDetails() {
                     placeholder="Nom"
                     className="form-input"
                     required
-                    disabled={isUnavailable}
                   />
                 </div>
                 <input
@@ -327,7 +397,6 @@ export default function PropertyDetails() {
                   placeholder="Email"
                   className="form-input"
                   required
-                  disabled={isUnavailable}
                 />
                 <input
                   value={bookingForm.telephone}
@@ -338,12 +407,12 @@ export default function PropertyDetails() {
                   placeholder="Téléphone"
                   className="form-input"
                   required
-                  disabled={isUnavailable}
                 />
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <div>
                     <label className="mb-1.5 block text-xs font-medium text-gray-500">Arrivée</label>
                     <input
+                      ref={arriveeInputRef}
                       value={bookingForm.dateArrivee}
                       onChange={(event) =>
                         setBookingForm({ ...bookingForm, dateArrivee: event.target.value })
@@ -351,7 +420,6 @@ export default function PropertyDetails() {
                       type="date"
                       className="form-input"
                       required
-                      disabled={isUnavailable}
                     />
                   </div>
                   <div>
@@ -366,14 +434,13 @@ export default function PropertyDetails() {
                       }
                       type="date"
                       className="form-input"
-                      disabled={isUnavailable}
                     />
                   </div>
                 </div>
                 <button
                   type="submit"
                   className="btn-accent mt-2 w-full py-4 text-lg disabled:cursor-not-allowed disabled:opacity-50"
-                  disabled={isUnavailable || submitting}
+                  disabled={isUnavailable || submitting || !bookingForm.dateArrivee}
                 >
                   {submitting ? 'Enregistrement…' : 'Enregistrer et ouvrir WhatsApp'}
                 </button>
@@ -385,6 +452,27 @@ export default function PropertyDetails() {
           </div>
         </div>
       </div>
+
+      <UnavailableAlternativesModal
+        open={showAlternatives}
+        onClose={() => setShowAlternatives(false)}
+        arrivee={bookingForm.dateArrivee || urlArrivee}
+        depart={bookingForm.dateDepart || urlDepart || undefined}
+        currentLogementNom={property.nom}
+        alternatives={alternatives}
+        onChangeDates={() => {
+          setShowAlternatives(false);
+          arriveeInputRef.current?.focus();
+        }}
+        onReserveAlternative={(alternative) => {
+          const params = new URLSearchParams();
+          const arrivee = bookingForm.dateArrivee || urlArrivee;
+          const depart = bookingForm.dateDepart || urlDepart;
+          if (arrivee) params.set('arrivee', arrivee);
+          if (depart) params.set('depart', depart);
+          navigate(`/logements/${alternative.id}?${params.toString()}`);
+        }}
+      />
     </div>
   );
 }

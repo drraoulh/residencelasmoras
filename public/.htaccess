@@ -1,0 +1,19 @@
+# LWS / Apache — routes React (SPA)
+Options -MultiViews
+DirectoryIndex index.html
+
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteBase /
+
+  # Fichiers et dossiers réels : ne pas réécrire
+  RewriteCond %{REQUEST_FILENAME} -f [OR]
+  RewriteCond %{REQUEST_FILENAME} -d
+  RewriteRule ^ - [L]
+
+  # Toutes les autres URLs → index.html
+  RewriteRule ^ index.html [L]
+</IfModule>
+
+# Si mod_rewrite indisponible, rediriger les 404 vers l'app
+ErrorDocument 404 /index.html

@@ -26,10 +26,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
 
     // Écouter les changements d'état de l'authentification (login, logout)
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       setSession(session);
       setUser(session?.user ?? null);
       setIsLoading(false);
+
+      if (event === 'TOKEN_REFRESHED' || event === 'SIGNED_IN') {
+        setSession(session);
+        setUser(session?.user ?? null);
+      }
     });
 
     return () => {

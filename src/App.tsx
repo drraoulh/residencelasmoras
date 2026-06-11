@@ -1,5 +1,8 @@
+import type { ReactNode } from 'react';
 import { BrowserRouter, Navigate, Outlet, Route, Routes } from 'react-router-dom';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { QueryClientProvider } from '@tanstack/react-query';
+import { queryClient } from './lib/queryClient';
+import { useLiveDataSync } from './hooks/useLiveDataSync';
 
 import AdminLayout from './components/layout/AdminLayout';
 import Footer from './components/layout/Footer';
@@ -19,10 +22,14 @@ import Gallery from './pages/public/Gallery';
 import Home from './pages/public/Home';
 import LogementsList from './pages/public/LogementsList';
 import NotFound from './pages/public/NotFound';
+import AuthCallback from './pages/public/AuthCallback';
 import ConfirmReservation from './pages/public/ConfirmReservation';
 import PropertyDetails from './pages/public/PropertyDetails';
 
-const queryClient = new QueryClient();
+function AppProviders({ children }: { children: ReactNode }) {
+  useLiveDataSync();
+  return <>{children}</>;
+}
 
 function PublicLayout() {
   return (
@@ -56,6 +63,7 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
+        <AppProviders>
         <BrowserRouter>
           <ScrollToTop />
           <Routes>
@@ -69,6 +77,7 @@ function App() {
             </Route>
 
             <Route path="/confirmer/:id" element={<ConfirmReservation />} />
+            <Route path="/auth/callback" element={<AuthCallback />} />
 
             <Route path="/admin/login" element={<Login />} />
 
@@ -85,6 +94,7 @@ function App() {
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
+        </AppProviders>
       </AuthProvider>
     </QueryClientProvider>
   );

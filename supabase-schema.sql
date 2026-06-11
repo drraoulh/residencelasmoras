@@ -1,4 +1,4 @@
-﻿-- Schema initial pour Residence Las Moras
+-- Schema initial pour Residence Las Moras
 
 -- 1. Table Logements
 CREATE TABLE public.logements (
@@ -62,7 +62,7 @@ ON public.reservations FOR INSERT WITH CHECK (true);
 
 CREATE POLICY "Consultation publique des disponibilites"
 ON public.reservations FOR SELECT
-USING (statut_reservation IN ('demande', 'confirmee', 'en_cours'));
+USING (statut_reservation IN ('confirmee', 'en_cours'));
 
 CREATE POLICY "Admins gerent les reservations"
 ON public.reservations FOR ALL USING (auth.role() = 'authenticated');

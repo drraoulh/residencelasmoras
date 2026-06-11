@@ -120,39 +120,39 @@ function SocialIcon({ type }: { type: (typeof socials)[number]['type'] }) {
 export default function Footer() {
   return (
     <footer className="border-t border-stone-200/80 bg-brand-gray">
-      <div className="mx-auto max-w-6xl px-4 py-14 sm:px-6">
-        <div className="grid gap-12 md:grid-cols-2 lg:grid-cols-12 lg:gap-8">
+      <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6 sm:py-16 lg:px-8">
+        <div className="grid grid-cols-1 gap-10 sm:gap-12 md:grid-cols-2 lg:grid-cols-12 lg:gap-x-10 lg:gap-y-0">
           {/* Marque */}
-          <div className="lg:col-span-4">
+          <div className="space-y-4 md:col-span-2 lg:col-span-4 lg:pr-4">
             <div className="flex items-center gap-3">
               <img
                 src={logoLasmoras}
                 alt="LAS MORAS — L'Art de Vivre Naturellement"
-                className="h-14 w-auto rounded-xl object-contain ring-1 ring-stone-200/80"
+                className="h-14 w-auto shrink-0 rounded-xl object-contain ring-1 ring-stone-200/80"
               />
               <BrandName size="sm" />
             </div>
-            <p className="mt-5 max-w-xs text-sm leading-relaxed text-brand-muted">
+            <p className="max-w-sm text-sm leading-relaxed text-brand-muted">
               Résidence d'appartements meublés de standing à Yaoundé. Chaque logement est une
               destination.
             </p>
-            <div className="mt-5 inline-flex items-center gap-2 rounded-full border border-stone-200/80 bg-white/70 px-3 py-2 text-xs text-brand-muted">
-              <Clock className="h-3.5 w-3.5 text-brand-red" strokeWidth={1.5} />
+            <div className="inline-flex items-center gap-2 rounded-full border border-stone-200/80 bg-white/70 px-3.5 py-2 text-xs text-brand-muted">
+              <Clock className="h-3.5 w-3.5 shrink-0 text-brand-red" strokeWidth={1.5} />
               Assistance 7j/7
             </div>
           </div>
 
           {/* Navigation */}
-          <div className="lg:col-span-3">
-            <p className="section-label !text-brand-red">Navigation</p>
-            <nav className="mt-4 flex flex-col gap-1">
+          <div className="md:col-span-1 lg:col-span-3 lg:pl-2">
+            <p className="section-label !mb-4 !text-brand-red">Navigation</p>
+            <nav className="flex flex-col gap-0.5">
               {navLinks.map(({ to, label, icon: Icon }) => (
                 <Link
                   key={to}
                   to={to}
-                  className="group flex items-center gap-3 rounded-xl px-2 py-2.5 text-sm text-brand-muted transition hover:bg-white/60 hover:text-brand-red"
+                  className="group flex items-center gap-3 rounded-xl px-2 py-2 text-sm text-brand-muted transition hover:bg-white/60 hover:text-brand-red"
                 >
-                  <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/80 text-brand-red ring-1 ring-stone-200/60 transition group-hover:bg-red-50">
+                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white/80 text-brand-red ring-1 ring-stone-200/60 transition group-hover:bg-red-50">
                     <Icon className="h-4 w-4" strokeWidth={1.5} />
                   </span>
                   {label}
@@ -162,25 +162,25 @@ export default function Footer() {
           </div>
 
           {/* Contact */}
-          <div className="lg:col-span-5">
-            <p className="section-label !text-brand-red">Contact</p>
-            <div className="mt-4 space-y-2">
+          <div className="md:col-span-1 lg:col-span-5">
+            <p className="section-label !mb-4 !text-brand-red">Contact</p>
+            <div className="space-y-1">
               {contactItems.map(({ icon: Icon, label, value, href, external }) => (
                 <a
                   key={label}
                   href={href}
                   target={external ? '_blank' : undefined}
                   rel={external ? 'noreferrer' : undefined}
-                  className="group flex items-center gap-3 rounded-xl px-2 py-2.5 transition hover:bg-white/60"
+                  className="group flex items-start gap-3 rounded-xl px-2 py-2.5 transition hover:bg-white/60 sm:items-center"
                 >
-                  <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg bg-white/80 text-brand-red ring-1 ring-stone-200/60 transition group-hover:bg-red-50">
+                  <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white/80 text-brand-red ring-1 ring-stone-200/60 transition group-hover:bg-red-50 sm:mt-0">
                     <Icon className="h-4 w-4" strokeWidth={1.5} />
                   </span>
-                  <span>
+                  <span className="min-w-0 space-y-0.5">
                     <span className="block text-[10px] uppercase tracking-widest text-brand-muted">
                       {label}
                     </span>
-                    <span className="text-sm font-medium text-brand-dark transition group-hover:text-brand-red">
+                    <span className="block break-words text-sm font-medium leading-snug text-brand-dark transition group-hover:text-brand-red">
                       {value}
                     </span>
                   </span>
@@ -189,21 +189,23 @@ export default function Footer() {
             </div>
 
             {/* Réseaux sociaux */}
-            <p className="section-label mt-8 !text-brand-red">Suivez-nous</p>
-            <div className="mt-3 flex flex-wrap gap-2">
-              {socials.map((social) => (
-                <a
-                  key={social.label}
-                  href={social.href}
-                  target="_blank"
-                  rel="noreferrer"
-                  aria-label={social.label}
-                  className="group flex h-10 w-10 items-center justify-center rounded-xl border border-stone-200/80 bg-white/80 text-brand-muted transition hover:border-brand-red/30 hover:bg-red-50 hover:text-brand-red"
-                  title={social.label}
-                >
-                  <SocialIcon type={social.type} />
-                </a>
-              ))}
+            <div className="mt-8 border-t border-stone-200/70 pt-6">
+              <p className="section-label !mb-3 !text-brand-red">Suivez-nous</p>
+              <div className="flex flex-wrap gap-2.5">
+                {socials.map((social) => (
+                  <a
+                    key={social.label}
+                    href={social.href}
+                    target="_blank"
+                    rel="noreferrer"
+                    aria-label={social.label}
+                    className="group flex h-10 w-10 items-center justify-center rounded-xl border border-stone-200/80 bg-white/80 text-brand-muted transition hover:border-brand-red/30 hover:bg-red-50 hover:text-brand-red"
+                    title={social.label}
+                  >
+                    <SocialIcon type={social.type} />
+                  </a>
+                ))}
+              </div>
             </div>
           </div>
         </div>
@@ -211,18 +213,19 @@ export default function Footer() {
 
       {/* Copyright */}
       <div className="border-t border-stone-200/60 bg-white/40">
-        <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-3 px-4 py-5 text-center sm:flex-row sm:px-6 sm:text-left">
-          <p className="flex max-w-full flex-wrap items-center justify-center gap-x-2 gap-y-1 text-xs text-brand-muted sm:justify-start">
+        <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 px-4 py-6 text-center sm:flex-row sm:px-6 sm:text-left lg:px-8">
+          <p className="flex max-w-full flex-wrap items-center justify-center gap-x-2 gap-y-1.5 text-xs leading-relaxed text-brand-muted sm:justify-start">
             <MapPin className="h-3.5 w-3.5 shrink-0 text-brand-red" strokeWidth={1.5} />
             <span>© {new Date().getFullYear()} LAS MORAS — L'Art de Vivre Naturellement</span>
           </p>
-          <div className="flex shrink-0 flex-wrap items-center justify-center gap-x-3 gap-y-1 text-xs text-brand-muted sm:justify-end">
+          <div className="flex shrink-0 flex-wrap items-center justify-center gap-x-4 gap-y-2 text-xs text-brand-muted sm:justify-end">
             <span>Yaoundé, Cameroun</span>
+            <span className="hidden h-3 w-px bg-stone-300 sm:block" aria-hidden />
             <Link
               to="/admin/login"
-              className="inline-flex items-center gap-1 transition hover:text-brand-red"
+              className="inline-flex items-center gap-1.5 transition hover:text-brand-red"
             >
-              <Lock className="h-3 w-3" strokeWidth={1.5} />
+              <Lock className="h-3 w-3 shrink-0" strokeWidth={1.5} />
               Administration
             </Link>
           </div>

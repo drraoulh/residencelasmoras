@@ -1,4 +1,5 @@
 import { supabase } from '../lib/supabaseClient';
+import { getSiteUrl } from './siteUrl';
 
 export function createConfirmToken() {
   return crypto.randomUUID().replace(/-/g, '').slice(0, 24);
@@ -9,7 +10,7 @@ export function buildConfirmNotes(logementNom: string, confirmToken: string) {
 }
 
 export function buildConfirmUrl(reservationId: string, token: string) {
-  return `${window.location.origin}/confirmer/${reservationId}?token=${encodeURIComponent(token)}`;
+  return `${getSiteUrl()}/confirmer/${reservationId}?token=${encodeURIComponent(token)}`;
 }
 
 export function buildReservationRef(reservationId: string) {

@@ -102,4 +102,24 @@
   .admin-btn-secondary {
     @apply inline-flex items-center justify-center gap-2 rounded-xl border border-stone-200/80 bg-white px-4 py-2.5 text-sm font-medium text-brand-dark transition hover:bg-brand-gray;
   }
+
+  .admin-table {
+    @apply w-full min-w-[640px] text-left text-sm;
+  }
+
+  .admin-table thead {
+    @apply border-b border-stone-200 bg-brand-gray/50 text-[11px] font-semibold uppercase tracking-wider text-brand-muted;
+  }
+
+  .admin-table th {
+    @apply px-4 py-3;
+  }
+
+  .admin-table td {
+    @apply border-b border-stone-100 px-4 py-3 text-brand-dark;
+  }
+
+  .admin-table tbody tr:last-child td {
+    @apply border-0;
+  }
 }

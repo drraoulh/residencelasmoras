@@ -18,6 +18,9 @@ export function useReservations() {
       if (error) throw error;
       return (data ?? []) as Reservation[];
     },
+    staleTime: 30_000,
+    refetchInterval: 3 * 60_000,
+    refetchIntervalInBackground: false,
   });
 
   const addReservation = useMutation({

@@ -14,13 +14,14 @@ import {
 } from 'lucide-react';
 import BrandName from '../ui/BrandName';
 import { useAuth } from '../../hooks/useAuth';
+import { useAutoCompleteReservations } from '../../hooks/useAutoCompleteReservations';
 import logoLasmoras from '../../assets/logo lasmoras.jpeg';
 
 const navItems = [
   { name: 'Tableau de bord', path: '/admin/dashboard', icon: LayoutDashboard },
   { name: 'Logements', path: '/admin/logements', icon: Home },
   { name: 'Réservations', path: '/admin/reservations', icon: CalendarCheck },
-  { name: 'Disponibilités', path: '/admin/disponibilites', icon: CalendarDays },
+  { name: 'Planning', path: '/admin/disponibilites', icon: CalendarDays },
   { name: 'Rapports', path: '/admin/rapports', icon: BarChart3 },
   { name: 'Contacts', path: '/admin/contacts', icon: Inbox },
 ];
@@ -54,6 +55,7 @@ function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
 
 export default function AdminLayout() {
   const { logout, user } = useAuth();
+  useAutoCompleteReservations();
   const [mobileOpen, setMobileOpen] = useState(false);
 
   useEffect(() => {

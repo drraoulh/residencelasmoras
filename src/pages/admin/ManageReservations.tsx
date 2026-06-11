@@ -1,9 +1,11 @@
 import { useMemo, useState } from 'react';
 import type { FormEvent } from 'react';
-import { Check, Edit, Plus, Search, Trash2, X } from 'lucide-react';
+import { Check, Edit, Plus, Search, Store, Trash2, X } from 'lucide-react';
+import AdminPageHeader from '../../components/admin/AdminPageHeader';
 import type { PaymentMethod, PaymentStatus, Reservation, ReservationStatus } from '../../types';
-import { isBlockingReservation } from '../../utils/availability';
+import { addDays } from '../../utils/availability';
 import { countNights, rangesOverlap } from '../../utils/helpers';
+import { isReservationStillBlocking, todayIso } from '../../utils/reservationLifecycle';
 import { useLogements } from '../../hooks/useLogements';
 import { useReservations } from '../../hooks/useReservations';
 
@@ -16,7 +18,7 @@ const emptyForm = {
   dateDepart: '',
   methodePaiement: 'mobile_money' as PaymentMethod,
   statutPaiement: 'non_paye' as PaymentStatus,
-  statutReservation: 'demande' as ReservationStatus,
+  statutReservation: 'confirmee' as ReservationStatus,
   montantPaye: '0',
   notes: '',
 };
@@ -70,7 +72,7 @@ export default function ManageReservations() {
       (reservation) =>
         reservation.id !== editingReservation?.id &&
         reservation.logement_id === form.logementId &&
-        isBlockingReservation(reservation.statut_reservation) &&
+        isReservationStillBlocking(reservation) &&
         rangesOverlap(
           form.dateArrivee,
           form.dateDepart,
@@ -100,9 +102,22 @@ export default function ManageReservations() {
       .sort((a, b) => new Date(b.created_at ?? '').getTime() - new Date(a.created_at ?? '').getTime());
   }, [logements, query, reservations, statusFilter]);
 
-  const openCreateModal = () => {
+  const openCreateModal = (walkIn = false) => {
+    const today = todayIso();
+    const tomorrow = addDays(today, 1);
     setEditingReservation(null);
-    setForm({ ...emptyForm, logementId: logements[0]?.id ?? '' });
+    setForm({
+      ...emptyForm,
+      logementId: logements[0]?.id ?? '',
+      clientEmail: walkIn ? 'surplace@lasmoras.local' : '',
+      dateArrivee: walkIn ? today : '',
+      dateDepart: walkIn ? tomorrow : '',
+      statutReservation: walkIn ? 'en_cours' : 'confirmee',
+      methodePaiement: walkIn ? 'espece' : 'mobile_money',
+      statutPaiement: walkIn ? 'paye' : 'non_paye',
+      montantPaye: walkIn ? String(logements[0]?.prix ?? 0) : '0',
+      notes: walkIn ? 'Client sur place — réservation admin' : '',
+    });
     setIsModalOpen(true);
   };
 
@@ -132,7 +147,7 @@ export default function ManageReservations() {
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (!selectedLogement) return;
+    if (!selectedLogement || conflict) return;
 
     const draft = {
       logement_id: selectedLogement.id,
@@ -158,22 +173,26 @@ export default function ManageReservations() {
 
   return (
     <div className="mx-auto max-w-7xl">
-      <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-3xl font-extrabold tracking-tight text-brand-dark">Réservations</h1>
-          <p className="mt-2 text-sm font-medium text-gray-500">
-            Historique clients, périodes, paiements et statuts de séjour.
-          </p>
-        </div>
-        <button
-          type="button"
-          onClick={openCreateModal}
-          className="inline-flex items-center justify-center gap-2 rounded-lg bg-brand-red px-5 py-3 font-bold text-white shadow-sm transition hover:bg-red-700"
-        >
-          <Plus className="h-5 w-5" />
-          Nouvelle réservation
-        </button>
-      </div>
+      <AdminPageHeader
+        title="Réservations"
+        description="Gérez les séjours en ligne et les clients sur place. Les dates passées se libèrent automatiquement."
+        actions={
+          <>
+            <button
+              type="button"
+              onClick={() => openCreateModal(true)}
+              className="admin-btn-secondary"
+            >
+              <Store className="h-4 w-4" />
+              Client sur place
+            </button>
+            <button type="button" onClick={() => openCreateModal(false)} className="admin-btn-primary">
+              <Plus className="h-4 w-4" />
+              Nouvelle réservation
+            </button>
+          </>
+        }
+      />
 
       <div className="mb-6 grid gap-4 rounded-lg border border-gray-100 bg-white p-4 shadow-sm md:grid-cols-[1fr_190px]">
         <label className="relative block">
@@ -294,8 +313,17 @@ export default function ManageReservations() {
           <div className="max-h-[92vh] w-full max-w-3xl overflow-y-auto rounded-lg bg-white shadow-2xl">
             <div className="flex items-center justify-between border-b border-gray-100 px-6 py-5">
               <h2 className="text-xl font-extrabold text-brand-dark">
-                {editingReservation ? 'Modifier la réservation' : 'Nouvelle réservation'}
+                {editingReservation
+                  ? 'Modifier la réservation'
+                  : form.notes.includes('Client sur place')
+                    ? 'Réservation client sur place'
+                    : 'Nouvelle réservation'}
               </h2>
+              {!editingReservation && (
+                <p className="mt-1 text-sm text-gray-500">
+                  La réservation confirmée bloque immédiatement le calendrier public.
+                </p>
+              )}
               <button type="button" onClick={closeModal} className="rounded-lg p-2 text-gray-500 hover:bg-gray-100">
                 <X className="h-5 w-5" />
               </button>
@@ -398,7 +426,11 @@ export default function ManageReservations() {
                 <button type="button" onClick={closeModal} className="rounded-lg border border-gray-200 px-5 py-3 font-bold text-gray-600">
                   Annuler
                 </button>
-                <button type="submit" className="rounded-lg bg-brand-red px-5 py-3 font-bold text-white hover:bg-red-700">
+                <button
+                  type="submit"
+                  disabled={Boolean(conflict)}
+                  className="rounded-lg bg-brand-red px-5 py-3 font-bold text-white hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
+                >
                   Enregistrer
                 </button>
               </div>

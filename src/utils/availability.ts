@@ -1,5 +1,6 @@
 import type { Logement, Reservation, ReservationStatus } from '../types';
 import { rangesOverlap } from './helpers';
+import { filterActiveBlockingSlots } from './reservationLifecycle';
 
 export type AvailabilitySlot = Pick<
   Reservation,
@@ -33,11 +34,8 @@ export function addDays(dateStr: string, days: number) {
 }
 
 export function getBlockingSlotsForLogement(logementId: string, slots: AvailabilitySlot[]) {
-  return slots
-    .filter(
-      (slot) =>
-        slot.logement_id === logementId && isBlockingReservation(slot.statut_reservation),
-    )
+  return filterActiveBlockingSlots(slots)
+    .filter((slot) => slot.logement_id === logementId)
     .sort((a, b) => a.date_arrivee.localeCompare(b.date_arrivee));
 }
 
@@ -89,6 +87,16 @@ export function getLogementAvailability(
     nextAvailableFrom: conflict.date_depart,
     blockingUntil: conflict.date_depart,
   };
+}
+
+export function getUnavailableMessage(result: AvailabilityResult) {
+  if (result.reason === 'Maintenance') {
+    return 'Ce logement est en maintenance sur cette période.';
+  }
+  if (result.nextAvailableFrom) {
+    return `Ces dates sont déjà réservées. Prochaine disponibilité à partir du ${formatDateFr(result.nextAvailableFrom)}.`;
+  }
+  return 'Ces dates ne sont pas disponibles pour ce logement.';
 }
 
 export function getNextAvailableArrival(

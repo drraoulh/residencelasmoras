@@ -1,0 +1,24 @@
+-- ═══════════════════════════════════════════════════════════════
+-- CONFIGURATION SUPABASE — liens d'invitation (pas localhost)
+-- À faire dans le tableau de bord Supabase, pas via ce script SQL
+-- ═══════════════════════════════════════════════════════════════
+--
+-- 1. Ouvrir : https://supabase.com/dashboard/project/niljvtfulfauijvwqfpo
+-- 2. Menu : Authentication → URL Configuration
+--
+-- 3. Site URL (remplacer localhost par votre domaine FTP) :
+--    https://www.residencelasmoras.com/auth/callback
+--
+-- 4. Redirect URLs (ajouter toutes ces lignes) :
+--    https://www.residencelasmoras.com/**
+--    https://residencelasmoras.com/**
+--    https://www.residencelasmoras.com/auth/callback
+--    http://localhost:5173/**
+--    http://localhost:5173/auth/callback
+--
+-- 5. Enregistrer (Save)
+--
+-- 6. Renvoyer une nouvelle invitation (les anciens emails gardent l'ancien lien)
+--
+-- 7. Dans .env.local avant npm run build :
+--    VITE_SITE_URL=https://www.VOTRE-DOMAINE.com

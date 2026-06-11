@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react';
-import { Link, Navigate, useNavigate } from 'react-router-dom';
+import { Link, Navigate, useNavigate, useSearchParams } from 'react-router-dom';
 import { ArrowLeft, Lock } from 'lucide-react';
 import BrandName from '../../components/ui/BrandName';
 import { useAuth } from '../../hooks/useAuth';
@@ -9,14 +9,42 @@ import logoLasmoras from '../../assets/logo lasmoras.jpeg';
 export default function Login() {
   const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const setupPassword = searchParams.get('setup') === 'password';
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  if (isAuthenticated) {
+  if (isAuthenticated && !setupPassword) {
     return <Navigate to="/admin/dashboard" replace />;
   }
+
+  const handleSetPassword = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setError('');
+
+    if (newPassword.length < 6) {
+      setError('Le mot de passe doit contenir au moins 6 caractères.');
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      setError('Les mots de passe ne correspondent pas.');
+      return;
+    }
+
+    setLoading(true);
+    const { error: updateError } = await supabase.auth.updateUser({ password: newPassword });
+    setLoading(false);
+
+    if (updateError) {
+      setError('Impossible de définir le mot de passe. Réessayez.');
+    } else {
+      navigate('/admin/dashboard');
+    }
+  };
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -68,8 +96,14 @@ export default function Login() {
               <Lock className="h-5 w-5" strokeWidth={1.5} />
             </span>
             <div>
-              <h1 className="text-xl font-semibold text-brand-dark">Connexion</h1>
-              <p className="text-sm text-brand-muted">Accès réservé à l'équipe LAS MORAS</p>
+              <h1 className="text-xl font-semibold text-brand-dark">
+                {setupPassword ? 'Créer votre mot de passe' : 'Connexion'}
+              </h1>
+              <p className="text-sm text-brand-muted">
+                {setupPassword
+                  ? 'Finalisez votre invitation admin LAS MORAS'
+                  : 'Accès réservé à l\'équipe LAS MORAS'}
+              </p>
             </div>
           </div>
 
@@ -79,6 +113,41 @@ export default function Login() {
             </div>
           )}
 
+          {setupPassword && isAuthenticated ? (
+            <form onSubmit={handleSetPassword} className="flex flex-col gap-4">
+              <div>
+                <label className="mb-1.5 block text-[11px] font-medium uppercase tracking-widest text-brand-muted">
+                  Nouveau mot de passe
+                </label>
+                <input
+                  type="password"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  className="form-input"
+                  required
+                  minLength={6}
+                  autoComplete="new-password"
+                />
+              </div>
+              <div>
+                <label className="mb-1.5 block text-[11px] font-medium uppercase tracking-widest text-brand-muted">
+                  Confirmer le mot de passe
+                </label>
+                <input
+                  type="password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  className="form-input"
+                  required
+                  minLength={6}
+                  autoComplete="new-password"
+                />
+              </div>
+              <button type="submit" disabled={loading} className="btn-accent mt-2 w-full disabled:opacity-60">
+                {loading ? 'Enregistrement…' : 'Activer mon compte'}
+              </button>
+            </form>
+          ) : (
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
             <div>
               <label className="mb-1.5 block text-[11px] font-medium uppercase tracking-widest text-brand-muted">
@@ -117,6 +186,7 @@ export default function Login() {
               {loading ? 'Connexion…' : 'Se connecter'}
             </button>
           </form>
+          )}
         </div>
       </div>
     </div>
