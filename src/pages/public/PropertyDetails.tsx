@@ -2,7 +2,9 @@ import { useState } from 'react';
 import type { FormEvent } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { ArrowLeft, Car, Coffee, MapPin, Shield, Tv, Wifi, Wind } from 'lucide-react';
-import { countNights, useLocalStorageStore } from '../../hooks/useLocalStorageStore';
+import { countNights } from '../../utils/helpers';
+import { useLogements } from '../../hooks/useLogements';
+import { useReservations } from '../../hooks/useReservations';
 import { getAmenityIcon } from '../../utils/amenityIcons';
 
 const defaultEquipements = [
@@ -25,7 +27,8 @@ const initialBookingForm = {
 
 export default function PropertyDetails() {
   const { id } = useParams();
-  const { logements, addReservation } = useLocalStorageStore();
+  const { logements } = useLogements();
+  const { addReservation } = useReservations();
   const [bookingForm, setBookingForm] = useState(initialBookingForm);
   const [sent, setSent] = useState(false);
   const property = logements.find((logement) => logement.id === id);
@@ -58,7 +61,7 @@ export default function PropertyDetails() {
     event.preventDefault();
     const nights = countNights(bookingForm.dateArrivee, bookingForm.dateDepart);
 
-    addReservation({
+    addReservation.mutate({
       logementId: property.id,
       clientNom: `${bookingForm.prenom.trim()} ${bookingForm.nom.trim()}`.trim(),
       clientEmail: bookingForm.email.trim(),

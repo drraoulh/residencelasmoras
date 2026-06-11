@@ -3,10 +3,10 @@ import { useSearchParams } from 'react-router-dom';
 import { Filter, Search, X } from 'lucide-react';
 import CtaBanner from '../../components/ui/CtaBanner';
 import LogementCard from '../../components/properties/LogementCard';
-import { useLocalStorageStore } from '../../hooks/useLocalStorageStore';
+import { useLogements } from '../../hooks/useLogements';
 
 export default function LogementsList() {
-  const { logements } = useLocalStorageStore();
+  const { logements } = useLogements();
   const [searchParams, setSearchParams] = useSearchParams();
 
   const [filterType, setFilterType] = useState(searchParams.get('type') ?? 'Tous');

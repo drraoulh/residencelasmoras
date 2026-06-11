@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { ArrowRight, Car, Search, ShieldCheck, Wifi, Wind } from 'lucide-react';
 import BrandName from '../../components/ui/BrandName';
 import LogementCard from '../../components/properties/LogementCard';
-import { useLocalStorageStore } from '../../hooks/useLocalStorageStore';
+import { useLogements } from '../../hooks/useLogements';
 import residenceLasMoras from '../../assets/residencelasmoras.jpeg';
 import residenceLasMoras1 from '../../assets/residencelasmoras1.jpeg';
 import residenceLasMoras2 from '../../assets/residencelasmoras2.jpeg';
@@ -20,7 +20,7 @@ const services = [
 
 function SearchBar() {
   const navigate = useNavigate();
-  const { logements } = useLocalStorageStore();
+  const { logements } = useLogements();
   const [arrivee, setArrivee] = useState('');
   const [depart, setDepart] = useState('');
   const [type, setType] = useState('Tous');
@@ -71,7 +71,7 @@ function SearchBar() {
 
 export default function Home() {
   const [slide, setSlide] = useState(0);
-  const { logements } = useLocalStorageStore();
+  const { logements } = useLogements();
   const featured = logements.filter((l) => l.statut === 'disponible').slice(0, 3);
   const display = featured.length > 0 ? featured : logements.slice(0, 3);
 

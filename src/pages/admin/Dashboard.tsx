@@ -1,27 +1,31 @@
-import { Banknote, Building2, CalendarCheck, Home, Inbox } from 'lucide-react';
+import { Banknote, Building2, CalendarCheck, Home as HomeIcon, Inbox } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { useLocalStorageStore } from '../../hooks/useLocalStorageStore';
+import { useLogements } from '../../hooks/useLogements';
+import { useMessages } from '../../hooks/useMessages';
+import { useReservations } from '../../hooks/useReservations';
 
 export default function Dashboard() {
-  const { logements, messages, reservations } = useLocalStorageStore();
+  const { logements } = useLogements();
+  const { messages } = useMessages();
+  const { reservations } = useReservations();
 
   const occupiedCount = logements.filter((logement) => logement.statut === 'occupe').length;
   const unreadMessages = messages.filter((message) => !message.lu).length;
   const activeReservations = reservations.filter(
     (reservation) =>
-      reservation.statutReservation === 'confirmee' || reservation.statutReservation === 'en_cours',
+      reservation.statut_reservation === 'confirmee' || reservation.statut_reservation === 'en_cours',
   );
   const paidRevenue = reservations
-    .filter((reservation) => reservation.statutReservation !== 'annulee')
-    .reduce((total, reservation) => total + reservation.montantPaye, 0);
+    .filter((reservation) => reservation.statut_reservation !== 'annulee')
+    .reduce((total, reservation) => total + Number(reservation.montant_paye), 0);
 
   const upcomingArrivals = [...reservations]
-    .filter((reservation) => reservation.statutReservation !== 'annulee')
-    .sort((a, b) => a.dateArrivee.localeCompare(b.dateArrivee))
+    .filter((reservation) => reservation.statut_reservation !== 'annulee')
+    .sort((a, b) => new Date(a.date_arrivee).getTime() - new Date(b.date_arrivee).getTime())
     .slice(0, 5);
 
   const kpis = [
-    { label: 'Total logements', value: logements.length, icon: Home, color: 'bg-gray-50 text-brand-dark' },
+    { label: 'Total logements', value: logements.length, icon: HomeIcon, color: 'bg-gray-50 text-brand-dark' },
     { label: 'Réservations actives', value: activeReservations.length, icon: CalendarCheck, color: 'bg-green-50 text-green-700' },
     { label: 'Logements occupés', value: occupiedCount, icon: Building2, color: 'bg-red-50 text-brand-red' },
     { label: 'Messages non lus', value: unreadMessages, icon: Inbox, color: 'bg-blue-50 text-blue-700' },
@@ -84,16 +88,16 @@ export default function Dashboard() {
           </div>
           <div className="divide-y divide-gray-100">
             {upcomingArrivals.map((reservation) => {
-              const logement = logements.find((item) => item.id === reservation.logementId);
+              const logement = logements.find((item) => item.id === reservation.logement_id);
               return (
                 <div key={reservation.id} className="px-6 py-4">
                   <div className="flex items-start justify-between gap-4">
                     <div>
-                      <p className="font-bold text-brand-dark">{reservation.clientNom}</p>
-                      <p className="mt-1 text-sm text-gray-500">{logement?.nom} - {reservation.clientTelephone}</p>
+                      <p className="font-bold text-brand-dark">{reservation.client_nom}</p>
+                      <p className="mt-1 text-sm text-gray-500">{logement?.nom} - {reservation.client_telephone}</p>
                     </div>
                     <p className="text-sm font-bold text-gray-700">
-                      {new Date(reservation.dateArrivee).toLocaleDateString('fr-FR')}
+                      {new Date(reservation.date_arrivee).toLocaleDateString('fr-FR')}
                     </p>
                   </div>
                 </div>

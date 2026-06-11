@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { CheckCheck, Mail, MailOpen, Search, Trash2 } from 'lucide-react';
-import { useLocalStorageStore } from '../../hooks/useLocalStorageStore';
+import { useMessages } from '../../hooks/useMessages';
 
 export default function ManageContacts() {
   const {
@@ -9,7 +9,7 @@ export default function ManageContacts() {
     markAllMessagesAsRead,
     deleteMessage,
     deleteReadMessages,
-  } = useLocalStorageStore();
+  } = useMessages();
   const [query, setQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<'tous' | 'non-lus' | 'lus'>('tous');
 

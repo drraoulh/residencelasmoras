@@ -1,4 +1,5 @@
 import { BrowserRouter, Navigate, Outlet, Route, Routes } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 import AdminLayout from './components/layout/AdminLayout';
 import Footer from './components/layout/Footer';
@@ -21,6 +22,8 @@ import LogementsList from './pages/public/LogementsList';
 import NotFound from './pages/public/NotFound';
 import PropertyDetails from './pages/public/PropertyDetails';
 
+const queryClient = new QueryClient();
+
 function PublicLayout() {
   return (
     <>
@@ -32,7 +35,16 @@ function PublicLayout() {
 }
 
 function ProtectedAdminRoute() {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, isLoading } = useAuth();
+  
+  if (isLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-brand-gray">
+        <div className="text-brand-dark font-bold">Chargement...</div>
+      </div>
+    );
+  }
+  
   if (!isAuthenticated) {
     return <Navigate to="/admin/login" replace />;
   }
@@ -41,37 +53,39 @@ function ProtectedAdminRoute() {
 
 function App() {
   return (
-    <AuthProvider>
-      <LocalStorageStoreProvider>
-        <BrowserRouter>
-          <ScrollToTop />
-          <Routes>
-            <Route element={<PublicLayout />}>
-              <Route path="/" element={<Home />} />
-              <Route path="/catalogue" element={<LogementsList />} />
-              <Route path="/galerie" element={<Gallery />} />
-              <Route path="/a-propos" element={<About />} />
-              <Route path="/logements/:id" element={<PropertyDetails />} />
-              <Route path="/contact" element={<Contact />} />
-            </Route>
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>
+        <LocalStorageStoreProvider>
+          <BrowserRouter>
+            <ScrollToTop />
+            <Routes>
+              <Route element={<PublicLayout />}>
+                <Route path="/" element={<Home />} />
+                <Route path="/catalogue" element={<LogementsList />} />
+                <Route path="/galerie" element={<Gallery />} />
+                <Route path="/a-propos" element={<About />} />
+                <Route path="/logements/:id" element={<PropertyDetails />} />
+                <Route path="/contact" element={<Contact />} />
+              </Route>
 
-            <Route path="/admin/login" element={<Login />} />
+              <Route path="/admin/login" element={<Login />} />
 
-            <Route path="/admin" element={<ProtectedAdminRoute />}>
-              <Route index element={<Dashboard />} />
-              <Route path="dashboard" element={<Dashboard />} />
-              <Route path="logements" element={<ManageLogements />} />
-              <Route path="reservations" element={<ManageReservations />} />
-              <Route path="disponibilites" element={<Availability />} />
-              <Route path="rapports" element={<Reports />} />
-              <Route path="contacts" element={<ManageContacts />} />
-            </Route>
+              <Route path="/admin" element={<ProtectedAdminRoute />}>
+                <Route index element={<Dashboard />} />
+                <Route path="dashboard" element={<Dashboard />} />
+                <Route path="logements" element={<ManageLogements />} />
+                <Route path="reservations" element={<ManageReservations />} />
+                <Route path="disponibilites" element={<Availability />} />
+                <Route path="rapports" element={<Reports />} />
+                <Route path="contacts" element={<ManageContacts />} />
+              </Route>
 
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
-      </LocalStorageStoreProvider>
-    </AuthProvider>
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </BrowserRouter>
+        </LocalStorageStoreProvider>
+      </AuthProvider>
+    </QueryClientProvider>
   );
 }
 

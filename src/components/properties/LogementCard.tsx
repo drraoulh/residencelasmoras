@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
-import type { Logement } from '../../hooks/useLocalStorageStore';
+import type { Logement } from '../../types';
 
 interface LogementCardProps {
   logement: Logement;

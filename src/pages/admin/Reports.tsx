@@ -1,22 +1,24 @@
 import { Banknote, CalendarCheck, CreditCard, TrendingUp } from 'lucide-react';
-import { useLocalStorageStore } from '../../hooks/useLocalStorageStore';
+import { useLogements } from '../../hooks/useLogements';
+import { useReservations } from '../../hooks/useReservations';
 
 export default function Reports() {
-  const { logements, reservations } = useLocalStorageStore();
+  const { logements } = useLogements();
+  const { reservations } = useReservations();
 
   const activeReservations = reservations.filter(
-    (reservation) => reservation.statutReservation !== 'annulee',
+    (reservation) => reservation.statut_reservation !== 'annulee',
   );
-  const paidRevenue = activeReservations.reduce((total, reservation) => total + reservation.montantPaye, 0);
+  const paidRevenue = activeReservations.reduce((total, reservation) => total + Number(reservation.montant_paye), 0);
   const expectedRevenue = activeReservations.reduce(
-    (total, reservation) => total + reservation.montantTotal,
+    (total, reservation) => total + Number(reservation.montant_total),
     0,
   );
   const remaining = Math.max(0, expectedRevenue - paidRevenue);
-  const nights = activeReservations.reduce((total, reservation) => total + reservation.nombreNuits, 0);
+  const nights = activeReservations.reduce((total, reservation) => total + Number(reservation.nombre_nuits), 0);
   const blockingReservations = activeReservations.filter(
     (reservation) =>
-      reservation.statutReservation === 'confirmee' || reservation.statutReservation === 'en_cours',
+      reservation.statut_reservation === 'confirmee' || reservation.statut_reservation === 'en_cours',
   );
   const occupancyRate = logements.length
     ? Math.round((blockingReservations.length / logements.length) * 100)
@@ -29,10 +31,10 @@ export default function Reports() {
     ['Carte', 'carte'],
   ].map(([label, method]) => ({
     label,
-    count: activeReservations.filter((reservation) => reservation.methodePaiement === method).length,
+    count: activeReservations.filter((reservation) => reservation.methode_paiement === method).length,
     amount: activeReservations
-      .filter((reservation) => reservation.methodePaiement === method)
-      .reduce((total, reservation) => total + reservation.montantPaye, 0),
+      .filter((reservation) => reservation.methode_paiement === method)
+      .reduce((total, reservation) => total + Number(reservation.montant_paye), 0),
   }));
 
   const kpis = [
@@ -108,10 +110,10 @@ export default function Reports() {
           <div className="divide-y divide-gray-100">
             {logements.map((logement) => {
               const logementReservations = activeReservations.filter(
-                (reservation) => reservation.logementId === logement.id,
+                (reservation) => reservation.logement_id === logement.id,
               );
               const total = logementReservations.reduce(
-                (sum, reservation) => sum + reservation.montantTotal,
+                (sum, reservation) => sum + Number(reservation.montant_total),
                 0,
               );
 

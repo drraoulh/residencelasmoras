@@ -2,7 +2,7 @@ import { useState } from 'react';
 import type { FormEvent } from 'react';
 import { Mail, MapPin, MessageCircle, Phone, Send } from 'lucide-react';
 import BrandName from '../../components/ui/BrandName';
-import { useLocalStorageStore } from '../../hooks/useLocalStorageStore';
+import { useMessages } from '../../hooks/useMessages';
 import residenceLasMoras from '../../assets/residencelasmoras.jpeg';
 
 const initialForm = { nom: '', email: '', sujet: '', message: '' };
@@ -17,13 +17,13 @@ const socials = [
 ];
 
 export default function Contact() {
-  const { addMessage } = useLocalStorageStore();
+  const { addMessage } = useMessages();
   const [form, setForm] = useState(initialForm);
   const [isSent, setIsSent] = useState(false);
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    addMessage({
+    addMessage.mutate({
       nom: form.nom.trim(),
       email: form.email.trim(),
       sujet: form.sujet.trim(),

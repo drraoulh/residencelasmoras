@@ -2,27 +2,36 @@ import { useState, type FormEvent } from 'react';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { Lock } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
+import { supabase } from '../../lib/supabaseClient';
 import logoLasmoras from '../../assets/logo lasmoras.jpeg';
 
 export default function Login() {
-  const { isAuthenticated, login } = useAuth();
+  const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
   if (isAuthenticated) {
     return <Navigate to="/admin/dashboard" replace />;
   }
 
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setError('');
+    setIsLoading(true);
 
-    if (login(email, password)) {
-      navigate('/admin/dashboard');
+    const { error: authError } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    if (authError) {
+      setError('Email ou mot de passe incorrect. (Ou config .env manquante)');
+      setIsLoading(false);
     } else {
-      setError('Email ou mot de passe incorrect.');
+      navigate('/admin/dashboard');
     }
   };
 
