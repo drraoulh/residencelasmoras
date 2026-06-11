@@ -32,6 +32,7 @@ export function useReservations() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['reservations'] });
+      queryClient.invalidateQueries({ queryKey: ['availability-slots'] });
     },
   });
 
@@ -48,6 +49,7 @@ export function useReservations() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['reservations'] });
+      queryClient.invalidateQueries({ queryKey: ['availability-slots'] });
     },
   });
 
@@ -58,6 +60,7 @@ export function useReservations() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['reservations'] });
+      queryClient.invalidateQueries({ queryKey: ['availability-slots'] });
     },
   });
 

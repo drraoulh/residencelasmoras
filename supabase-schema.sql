@@ -60,6 +60,10 @@ ON public.logements FOR ALL USING (auth.role() = 'authenticated');
 CREATE POLICY "Tout le monde peut creer une reservation"
 ON public.reservations FOR INSERT WITH CHECK (true);
 
+CREATE POLICY "Consultation publique des disponibilites"
+ON public.reservations FOR SELECT
+USING (statut_reservation IN ('demande', 'confirmee', 'en_cours'));
+
 CREATE POLICY "Admins gerent les reservations"
 ON public.reservations FOR ALL USING (auth.role() = 'authenticated');
 
@@ -69,3 +73,28 @@ ON public.contacts FOR INSERT WITH CHECK (true);
 
 CREATE POLICY "Admins gerent les messages"
 ON public.contacts FOR ALL USING (auth.role() = 'authenticated');
+
+-- Confirmation WhatsApp : lien securise sans connexion admin
+CREATE OR REPLACE FUNCTION public.confirm_reservation_by_token(
+  p_reservation_id UUID,
+  p_token TEXT
+)
+RETURNS BOOLEAN
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+BEGIN
+  UPDATE public.reservations
+  SET statut_reservation = 'confirmee',
+      notes = COALESCE(notes, '') || E'\nConfirmée via lien WhatsApp.'
+  WHERE id = p_reservation_id
+    AND statut_reservation = 'demande'
+    AND notes LIKE '%confirm:' || p_token || '%';
+
+  RETURN FOUND;
+END;
+$$;
+
+GRANT EXECUTE ON FUNCTION public.confirm_reservation_by_token(UUID, TEXT) TO anon;
+GRANT EXECUTE ON FUNCTION public.confirm_reservation_by_token(UUID, TEXT) TO authenticated;

@@ -1,103 +1,169 @@
+import { useEffect, useState } from 'react';
 import { Link, Outlet, useLocation } from 'react-router-dom';
 import {
   BarChart3,
   CalendarCheck,
   CalendarDays,
+  ExternalLink,
   Home,
   Inbox,
   LayoutDashboard,
   LogOut,
+  Menu,
+  X,
 } from 'lucide-react';
+import BrandName from '../ui/BrandName';
 import { useAuth } from '../../hooks/useAuth';
 import logoLasmoras from '../../assets/logo lasmoras.jpeg';
 
-export default function AdminLayout() {
-  const location = useLocation();
-  const { logout } = useAuth();
+const navItems = [
+  { name: 'Tableau de bord', path: '/admin/dashboard', icon: LayoutDashboard },
+  { name: 'Logements', path: '/admin/logements', icon: Home },
+  { name: 'Réservations', path: '/admin/reservations', icon: CalendarCheck },
+  { name: 'Disponibilités', path: '/admin/disponibilites', icon: CalendarDays },
+  { name: 'Rapports', path: '/admin/rapports', icon: BarChart3 },
+  { name: 'Contacts', path: '/admin/contacts', icon: Inbox },
+];
 
-  const navItems = [
-    { name: 'Tableau de bord', path: '/admin/dashboard', icon: LayoutDashboard },
-    { name: 'Logements', path: '/admin/logements', icon: Home },
-    { name: 'Réservations', path: '/admin/reservations', icon: CalendarCheck },
-    { name: 'Disponibilités', path: '/admin/disponibilites', icon: CalendarDays },
-    { name: 'Rapports', path: '/admin/rapports', icon: BarChart3 },
-    { name: 'Contacts', path: '/admin/contacts', icon: Inbox },
-  ];
+function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
+  const location = useLocation();
+
+  return (
+    <nav className="flex flex-1 flex-col gap-1 p-4">
+      {navItems.map((item) => {
+        const isActive = location.pathname.startsWith(item.path);
+        return (
+          <Link
+            key={item.path}
+            to={item.path}
+            onClick={onNavigate}
+            className={`flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition ${
+              isActive
+                ? 'bg-red-50 text-brand-red'
+                : 'text-brand-muted hover:bg-brand-gray hover:text-brand-dark'
+            }`}
+          >
+            <item.icon className="h-4 w-4 shrink-0" strokeWidth={1.5} />
+            {item.name}
+          </Link>
+        );
+      })}
+    </nav>
+  );
+}
+
+export default function AdminLayout() {
+  const { logout, user } = useAuth();
+  const [mobileOpen, setMobileOpen] = useState(false);
+
+  useEffect(() => {
+    document.body.style.overflow = mobileOpen ? 'hidden' : '';
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [mobileOpen]);
+
+  const userLabel = user?.email ?? 'Administrateur';
 
   return (
     <div className="flex min-h-screen bg-brand-gray">
-      <aside className="hidden w-72 flex-shrink-0 flex-col border-r border-gray-200 bg-white shadow-sm lg:flex">
-        <div className="flex flex-col items-center border-b border-gray-100 p-8">
-          <img
-            src={logoLasmoras}
-            alt="Résidence Las Moras"
-            className="h-20 w-auto rounded-xl shadow-sm"
-          />
-          <p className="mt-3 text-xs font-bold uppercase tracking-widest text-brand-red">
-            Administration
-          </p>
+      {/* Sidebar desktop */}
+      <aside className="hidden w-72 shrink-0 flex-col border-r border-stone-200/70 bg-white lg:flex">
+        <div className="border-b border-stone-100 px-6 py-6">
+          <div className="flex items-center gap-3">
+            <img
+              src={logoLasmoras}
+              alt="LAS MORAS"
+              className="h-12 w-auto rounded-lg object-contain ring-1 ring-stone-200/80"
+            />
+            <div className="min-w-0">
+              <BrandName size="sm" />
+              <p className="mt-1 text-[10px] font-medium uppercase tracking-widest text-brand-muted">
+                Administration
+              </p>
+            </div>
+          </div>
         </div>
 
-        <nav className="flex flex-1 flex-col gap-2 p-6">
-          {navItems.map((item) => {
-            const isActive = location.pathname.startsWith(item.path);
-            return (
-              <Link
-                key={item.path}
-                to={item.path}
-                className={`flex items-center gap-4 rounded-xl px-5 py-3.5 font-semibold transition ${
-                  isActive
-                    ? 'bg-red-50 text-brand-red shadow-sm'
-                    : 'text-gray-600 hover:bg-gray-50 hover:text-brand-dark'
-                }`}
-              >
-                <item.icon className="h-5 w-5" />
-                {item.name}
-              </Link>
-            );
-          })}
-        </nav>
+        <SidebarNav />
 
-        <div className="space-y-2 border-t border-gray-100 p-6">
-          <Link
-            to="/"
-            className="flex w-full items-center justify-center gap-3 rounded-xl border border-gray-200 px-5 py-3.5 font-semibold text-gray-500 transition hover:border-red-100 hover:bg-red-50 hover:text-brand-red"
-          >
+        <div className="space-y-2 border-t border-stone-100 p-4">
+          <p className="truncate px-2 text-[11px] text-brand-muted" title={userLabel}>
+            {userLabel}
+          </p>
+          <Link to="/" className="admin-btn-secondary w-full">
+            <ExternalLink className="h-4 w-4" />
             Voir le site
           </Link>
-          <button
-            type="button"
-            onClick={logout}
-            className="flex w-full items-center justify-center gap-3 rounded-xl border border-gray-200 px-5 py-3.5 font-semibold text-gray-500 transition hover:border-red-100 hover:bg-red-50 hover:text-brand-red"
-          >
-            <LogOut className="h-5 w-5" />
+          <button type="button" onClick={logout} className="admin-btn-secondary w-full">
+            <LogOut className="h-4 w-4" />
             Déconnexion
           </button>
         </div>
       </aside>
 
       <main className="min-w-0 flex-1">
-        <div className="sticky top-0 z-30 border-b border-gray-200 bg-white/95 px-4 py-3 shadow-sm backdrop-blur lg:hidden">
-          <div className="flex items-center gap-2 overflow-x-auto">
-            {navItems.map((item) => {
-              const isActive = location.pathname.startsWith(item.path);
-              return (
-                <Link
-                  key={item.path}
-                  to={item.path}
-                  className={`flex shrink-0 items-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold ${
-                    isActive ? 'bg-red-50 text-brand-red' : 'text-gray-600'
-                  }`}
-                >
-                  <item.icon className="h-4 w-4" />
-                  {item.name}
-                </Link>
-              );
-            })}
+        {/* Header mobile */}
+        <header className="sticky top-0 z-40 flex items-center justify-between border-b border-stone-200/70 bg-white/95 px-4 py-3 backdrop-blur lg:hidden">
+          <div className="flex min-w-0 items-center gap-2">
+            <img src={logoLasmoras} alt="LAS MORAS" className="h-9 w-auto rounded-lg" />
+            <BrandName size="sm" className="hidden min-[400px]:block" />
           </div>
-        </div>
+          <button
+            type="button"
+            onClick={() => setMobileOpen(true)}
+            className="flex h-10 w-10 items-center justify-center rounded-xl border border-stone-200/80 text-brand-dark"
+            aria-label="Ouvrir le menu"
+          >
+            <Menu className="h-5 w-5" />
+          </button>
+        </header>
 
-        <div className="p-4 sm:p-6 lg:p-10">
+        {/* Drawer mobile */}
+        {mobileOpen && (
+          <div className="fixed inset-0 z-50 lg:hidden">
+            <button
+              type="button"
+              className="absolute inset-0 bg-black/30 backdrop-blur-sm"
+              onClick={() => setMobileOpen(false)}
+              aria-label="Fermer le menu"
+            />
+            <aside className="absolute inset-y-0 left-0 flex w-[min(100%,20rem)] flex-col bg-white shadow-2xl">
+              <div className="flex items-center justify-between border-b border-stone-100 px-4 py-4">
+                <BrandName size="sm" />
+                <button
+                  type="button"
+                  onClick={() => setMobileOpen(false)}
+                  className="flex h-9 w-9 items-center justify-center rounded-lg hover:bg-brand-gray"
+                  aria-label="Fermer"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+              <SidebarNav onNavigate={() => setMobileOpen(false)} />
+              <div className="mt-auto space-y-2 border-t border-stone-100 p-4">
+                <p className="truncate px-2 text-[11px] text-brand-muted">{userLabel}</p>
+                <Link to="/" onClick={() => setMobileOpen(false)} className="admin-btn-secondary w-full">
+                  <ExternalLink className="h-4 w-4" />
+                  Voir le site
+                </Link>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMobileOpen(false);
+                    logout();
+                  }}
+                  className="admin-btn-secondary w-full"
+                >
+                  <LogOut className="h-4 w-4" />
+                  Déconnexion
+                </button>
+              </div>
+            </aside>
+          </div>
+        )}
+
+        <div className="p-4 sm:p-6 lg:p-8 xl:p-10">
           <Outlet />
         </div>
       </main>

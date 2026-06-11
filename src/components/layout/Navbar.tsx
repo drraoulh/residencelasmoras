@@ -8,7 +8,7 @@ const navLinks = [
   { to: '/', label: 'Accueil' },
   { to: '/catalogue', label: 'Logements' },
   { to: '/galerie', label: 'Galerie' },
-  { to: '/a-propos', label: 'À propos' },
+  { to: '/a-propos', label: 'À propos de nous' },
   { to: '/contact', label: 'Contact' },
 ];
 
@@ -157,7 +157,7 @@ export default function Navbar() {
           />
           {/* Panel — positionné juste sous le header réel */}
           <div
-            className="absolute left-3 right-3 rounded-2xl glass-card p-2 shadow-2xl sm:left-auto sm:right-4 sm:w-80"
+            className="absolute left-3 right-3 max-h-[calc(100dvh-5rem)] overflow-y-auto rounded-2xl glass-card p-2 shadow-2xl sm:left-auto sm:right-4 sm:max-h-none sm:w-80"
             style={{ top: headerHeight + 8 }}
           >
             <nav className="flex flex-col">

@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import {
   ArrowRight,
   Car,
+  CarFront,
   Compass,
   Droplets,
   Heart,
@@ -12,6 +13,9 @@ import {
   Wifi,
 } from 'lucide-react';
 import BrandName from '../../components/ui/BrandName';
+import FaqSection from '../../components/ui/FaqSection';
+import GoogleReviews from '../../components/ui/GoogleReviews';
+import { faqItems } from '../../data/faq';
 import residenceLasMoras from '../../assets/residencelasmoras.jpeg';
 import residenceLasMoras1 from '../../assets/residencelasmoras1.jpeg';
 import residenceLasMoras2 from '../../assets/residencelasmoras2.jpeg';
@@ -26,6 +30,7 @@ const commitments = [
   { icon: Tv, text: 'Canal+' },
   { icon: Droplets, text: 'Eau chaude 24/7' },
   { icon: ShieldCheck, text: 'Sécurité renforcée' },
+  { icon: CarFront, text: 'Location de voitures — ville, aéroport' },
   { icon: Car, text: 'Parking sécurisé' },
 ];
 
@@ -41,7 +46,7 @@ export default function About() {
         <div className="absolute inset-0 bg-stone-900/50" />
         <div className="relative z-10 mx-auto max-w-6xl px-4 pt-28 pb-16 text-center sm:px-6">
           <div className="glass-on-image mx-auto inline-block">
-            <p className="section-label !text-white/60">À propos</p>
+            <p className="section-label !text-white/60">À propos de nous</p>
             <div className="mt-3 flex justify-center">
               <BrandName variant="light" size="lg" />
             </div>
@@ -188,6 +193,24 @@ export default function About() {
               />
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* Avis Google */}
+      <section className="px-4 py-16 sm:px-6 sm:py-20">
+        <div className="mx-auto max-w-6xl">
+          <GoogleReviews />
+        </div>
+      </section>
+
+      {/* FAQ */}
+      <section className="border-t border-stone-200/60 bg-brand-gray px-4 py-16 sm:px-6 sm:py-20 lg:py-24">
+        <div className="mx-auto max-w-6xl">
+          <FaqSection
+            id="faq"
+            items={faqItems}
+            description="Tout ce qu'il faut savoir avant de réserver votre séjour à LAS MORAS."
+          />
         </div>
       </section>
 

@@ -1,7 +1,8 @@
 import { useMemo, useState } from 'react';
 import type { FormEvent } from 'react';
-import { Edit, Plus, Search, Trash2, X } from 'lucide-react';
+import { Check, Edit, Plus, Search, Trash2, X } from 'lucide-react';
 import type { PaymentMethod, PaymentStatus, Reservation, ReservationStatus } from '../../types';
+import { isBlockingReservation } from '../../utils/availability';
 import { countNights, rangesOverlap } from '../../utils/helpers';
 import { useLogements } from '../../hooks/useLogements';
 import { useReservations } from '../../hooks/useReservations';
@@ -47,10 +48,6 @@ function statusClass(status: ReservationStatus) {
   if (status === 'annulee') return 'bg-red-50 text-brand-red ring-red-100';
   if (status === 'terminee') return 'bg-gray-50 text-gray-700 ring-gray-100';
   return 'bg-orange-50 text-orange-700 ring-orange-100';
-}
-
-function isBlockingReservation(status: ReservationStatus) {
-  return status === 'confirmee' || status === 'en_cours';
 }
 
 export default function ManageReservations() {
@@ -251,6 +248,21 @@ export default function ManageReservations() {
                     </td>
                     <td className="px-6 py-5">
                       <div className="flex justify-end gap-2">
+                        {reservation.statut_reservation === 'demande' && (
+                          <button
+                            type="button"
+                            onClick={() =>
+                              updateReservation.mutate({
+                                id: reservation.id,
+                                updates: { statut_reservation: 'confirmee' },
+                              })
+                            }
+                            className="rounded-lg border border-green-200 bg-green-50 px-3 py-2 text-xs font-bold text-green-700 transition hover:bg-green-100"
+                            title="Confirmer la réservation"
+                          >
+                            <Check className="h-4 w-4" />
+                          </button>
+                        )}
                         <button
                           type="button"
                           onClick={() => openEditModal(reservation)}

@@ -19,6 +19,7 @@ import Gallery from './pages/public/Gallery';
 import Home from './pages/public/Home';
 import LogementsList from './pages/public/LogementsList';
 import NotFound from './pages/public/NotFound';
+import ConfirmReservation from './pages/public/ConfirmReservation';
 import PropertyDetails from './pages/public/PropertyDetails';
 
 const queryClient = new QueryClient();
@@ -38,8 +39,9 @@ function ProtectedAdminRoute() {
   
   if (isLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-brand-gray">
-        <div className="text-brand-dark font-bold">Chargement...</div>
+      <div className="flex min-h-screen flex-col items-center justify-center gap-3 bg-brand-gray">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-brand-red border-t-transparent" />
+        <p className="text-sm text-brand-muted">Chargement de l'espace admin…</p>
       </div>
     );
   }
@@ -65,6 +67,8 @@ function App() {
               <Route path="/logements/:id" element={<PropertyDetails />} />
               <Route path="/contact" element={<Contact />} />
             </Route>
+
+            <Route path="/confirmer/:id" element={<ConfirmReservation />} />
 
             <Route path="/admin/login" element={<Login />} />
 

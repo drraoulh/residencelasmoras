@@ -1,10 +1,14 @@
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import type { FormEvent } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
+import { Link, useParams, useSearchParams } from 'react-router-dom';
 import { ArrowLeft, Car, Coffee, MapPin, Shield, Tv, Wifi, Wind } from 'lucide-react';
-import { countNights } from '../../utils/helpers';
+import { useAvailabilitySlots } from '../../hooks/useAvailabilitySlots';
 import { useLogements } from '../../hooks/useLogements';
-import { useReservations } from '../../hooks/useReservations';
+import { formatDateFr, formatSearchPeriod, getLogementAvailability } from '../../utils/availability';
+import { buildConfirmUrl, buildReservationRef } from '../../utils/confirmReservation';
+import { createReservationRequest } from '../../utils/reservationRequest';
+import { openReservationWhatsApp } from '../../utils/whatsapp';
 import { getAmenityIcon } from '../../utils/amenityIcons';
 
 const defaultEquipements = [
@@ -27,11 +31,34 @@ const initialBookingForm = {
 
 export default function PropertyDetails() {
   const { id } = useParams();
+  const [searchParams] = useSearchParams();
   const { logements } = useLogements();
-  const { addReservation } = useReservations();
+  const queryClient = useQueryClient();
+  const { slots } = useAvailabilitySlots();
   const [bookingForm, setBookingForm] = useState(initialBookingForm);
   const [sent, setSent] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState('');
   const property = logements.find((logement) => logement.id === id);
+
+  const urlArrivee = searchParams.get('arrivee') ?? '';
+  const urlDepart = searchParams.get('depart') ?? '';
+
+  useEffect(() => {
+    if (urlArrivee || urlDepart) {
+      setBookingForm((current) => ({
+        ...current,
+        dateArrivee: urlArrivee || current.dateArrivee,
+        dateDepart: urlDepart || current.dateDepart,
+      }));
+    }
+  }, [urlArrivee, urlDepart]);
+
+  const periodAvailability = useMemo(() => {
+    if (!property || !urlArrivee) return null;
+    if (urlDepart && urlDepart <= urlArrivee) return null;
+    return getLogementAvailability(property, slots, urlArrivee, urlDepart || undefined);
+  }, [property, slots, urlArrivee, urlDepart]);
 
   if (!property) {
     return (
@@ -47,7 +74,10 @@ export default function PropertyDetails() {
 
   const weeklyPrice = property.prix * 6;
   const monthlyPrice = property.prix * 25;
-  const isUnavailable = property.statut === 'occupe' || property.statut === 'maintenance';
+  const isUnavailableByStatut = property.statut === 'occupe' || property.statut === 'maintenance';
+  const isUnavailable = periodAvailability
+    ? !periodAvailability.available
+    : isUnavailableByStatut;
 
   const galleryPhotos = property.photos.length >= 4
     ? property.photos.slice(0, 4)
@@ -57,27 +87,49 @@ export default function PropertyDetails() {
     ? property.equipements.map((name) => ({ name, icon: getAmenityIcon(name) }))
     : defaultEquipements;
 
-  const handleBooking = (event: FormEvent<HTMLFormElement>) => {
+  const handleBooking = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    const nights = countNights(bookingForm.dateArrivee, bookingForm.dateDepart);
+    setSubmitError('');
 
-    addReservation.mutate({
-      logement_id: property.id,
-      client_nom: `${bookingForm.prenom.trim()} ${bookingForm.nom.trim()}`.trim(),
-      client_email: bookingForm.email.trim(),
-      client_telephone: bookingForm.telephone.trim(),
-      date_arrivee: bookingForm.dateArrivee,
-      date_depart: bookingForm.dateDepart,
-      nombre_nuits: nights,
-      montant_total: property.prix * nights,
-      montant_paye: 0,
-      methode_paiement: 'mobile_money',
-      statut_paiement: 'non_paye',
-      statut_reservation: 'demande',
-      notes: 'Demande envoyée depuis le site public.',
-    });
-    setBookingForm(initialBookingForm);
-    setSent(true);
+    if (!bookingForm.dateArrivee) return;
+    if (bookingForm.dateDepart && bookingForm.dateDepart <= bookingForm.dateArrivee) return;
+
+    setSubmitting(true);
+    try {
+      const result = await createReservationRequest({
+        logementId: property.id,
+        logementNom: property.nom,
+        prenom: bookingForm.prenom.trim(),
+        nom: bookingForm.nom.trim(),
+        email: bookingForm.email.trim(),
+        telephone: bookingForm.telephone.trim(),
+        dateArrivee: bookingForm.dateArrivee,
+        dateDepart: bookingForm.dateDepart || undefined,
+        prixParNuit: property.prix,
+      });
+
+      await queryClient.invalidateQueries({ queryKey: ['availability-slots'] });
+      await queryClient.invalidateQueries({ queryKey: ['reservations'] });
+
+      openReservationWhatsApp({
+        logementNom: property.nom,
+        logementType: property.type,
+        prix: property.prix,
+        arrivee: bookingForm.dateArrivee,
+        depart: bookingForm.dateDepart || undefined,
+        prenom: bookingForm.prenom.trim(),
+        nom: bookingForm.nom.trim(),
+        email: bookingForm.email.trim(),
+        telephone: bookingForm.telephone.trim(),
+        confirmUrl: buildConfirmUrl(result.id, result.confirmToken),
+        reservationRef: buildReservationRef(result.id),
+      });
+      setSent(true);
+    } catch {
+      setSubmitError('Enregistrement impossible. Réessayez ou contactez-nous par téléphone.');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -215,16 +267,29 @@ export default function PropertyDetails() {
 
               <h3 className="mb-6 text-xl font-bold text-brand-dark">Demande de réservation</h3>
 
+              {periodAvailability?.available && urlArrivee && (
+                <div className="mb-5 rounded-xl bg-green-50 px-4 py-3 text-sm font-semibold text-green-700 ring-1 ring-green-100">
+                  Disponible — {formatSearchPeriod(urlArrivee, urlDepart || undefined)}.
+                </div>
+              )}
+
               {isUnavailable && (
                 <div className="mb-5 rounded-xl bg-orange-50 px-4 py-3 text-sm font-semibold text-orange-700 ring-1 ring-orange-100">
-                  Ce logement est actuellement indisponible. Contactez-nous pour connaître les
-                  prochaines dates libres.
+                  {periodAvailability?.nextAvailableFrom
+                    ? `Indisponible sur cette période. Prochaine disponibilité à partir du ${formatDateFr(periodAvailability.nextAvailableFrom)}.`
+                    : 'Ce logement est actuellement indisponible. Contactez-nous pour connaître les prochaines dates libres.'}
+                </div>
+              )}
+
+              {submitError && (
+                <div className="mb-5 rounded-xl bg-red-50 px-4 py-3 text-sm text-brand-red ring-1 ring-red-100">
+                  {submitError}
                 </div>
               )}
 
               {sent && (
                 <div className="mb-5 rounded-xl bg-green-50 px-4 py-3 text-sm font-semibold text-green-700 ring-1 ring-green-100">
-                  Demande envoyée avec succès. Elle apparaît dans l'espace administrateur.
+                  Demande enregistrée en ligne. Envoyez le message WhatsApp pour confirmer avec l'équipe.
                 </div>
               )}
 
@@ -276,34 +341,41 @@ export default function PropertyDetails() {
                   disabled={isUnavailable}
                 />
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                  <input
-                    value={bookingForm.dateArrivee}
-                    onChange={(event) =>
-                      setBookingForm({ ...bookingForm, dateArrivee: event.target.value })
-                    }
-                    type="date"
-                    className="form-input"
-                    required
-                    disabled={isUnavailable}
-                  />
-                  <input
-                    value={bookingForm.dateDepart}
-                    min={bookingForm.dateArrivee}
-                    onChange={(event) =>
-                      setBookingForm({ ...bookingForm, dateDepart: event.target.value })
-                    }
-                    type="date"
-                    className="form-input"
-                    required
-                    disabled={isUnavailable}
-                  />
+                  <div>
+                    <label className="mb-1.5 block text-xs font-medium text-gray-500">Arrivée</label>
+                    <input
+                      value={bookingForm.dateArrivee}
+                      onChange={(event) =>
+                        setBookingForm({ ...bookingForm, dateArrivee: event.target.value })
+                      }
+                      type="date"
+                      className="form-input"
+                      required
+                      disabled={isUnavailable}
+                    />
+                  </div>
+                  <div>
+                    <label className="mb-1.5 block text-xs font-medium text-gray-500">
+                      Départ <span className="font-normal text-gray-400">(optionnel)</span>
+                    </label>
+                    <input
+                      value={bookingForm.dateDepart}
+                      min={bookingForm.dateArrivee}
+                      onChange={(event) =>
+                        setBookingForm({ ...bookingForm, dateDepart: event.target.value })
+                      }
+                      type="date"
+                      className="form-input"
+                      disabled={isUnavailable}
+                    />
+                  </div>
                 </div>
                 <button
                   type="submit"
-                  className="btn-primary mt-2 w-full py-4 text-lg disabled:cursor-not-allowed disabled:opacity-50"
-                  disabled={isUnavailable}
+                  className="btn-accent mt-2 w-full py-4 text-lg disabled:cursor-not-allowed disabled:opacity-50"
+                  disabled={isUnavailable || submitting}
                 >
-                  Demander une réservation
+                  {submitting ? 'Enregistrement…' : 'Enregistrer et ouvrir WhatsApp'}
                 </button>
                 <p className="text-center text-xs font-medium text-gray-500">
                   Aucun montant ne vous sera débité pour le moment.

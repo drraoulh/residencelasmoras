@@ -1,152 +1,80 @@
-import { useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { ArrowRight, Car, Search, ShieldCheck, Wifi, Wind } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { ArrowRight, Car, CarFront, ShieldCheck, Wifi, Wind } from 'lucide-react';
+import HeroSearchBar from '../../components/search/HeroSearchBar';
 import BrandName from '../../components/ui/BrandName';
+import FaqSection from '../../components/ui/FaqSection';
+import GoogleReviews from '../../components/ui/GoogleReviews';
+import { faqItems } from '../../data/faq';
 import LogementCard from '../../components/properties/LogementCard';
 import { useLogements } from '../../hooks/useLogements';
+import heroPrincipal from '../../assets/heroVue face.png';
 import residenceLasMoras from '../../assets/residencelasmoras.jpeg';
 import residenceLasMoras1 from '../../assets/residencelasmoras1.jpeg';
 import residenceLasMoras2 from '../../assets/residencelasmoras2.jpeg';
-import vueResidence from '../../assets/Vue residence.jpeg';
-
-const slides = [vueResidence, residenceLasMoras, residenceLasMoras1, residenceLasMoras2];
 
 const services = [
-  { icon: Wifi, title: 'Wi-Fi fibre' },
-  { icon: ShieldCheck, title: 'Sécurité 24/7' },
-  { icon: Car, title: 'Parking' },
-  { icon: Wind, title: 'Climatisation' },
+  { icon: Wifi, title: 'Wi-Fi fibre', description: 'Connexion stable pour travailler et streamer.' },
+  { icon: ShieldCheck, title: 'Sécurité 24/7', description: 'Accès contrôlé et présence sur site.' },
+  { icon: Wind, title: 'Climatisation', description: 'Confort thermique dans chaque logement.' },
+  {
+    icon: CarFront,
+    title: 'Location de voitures',
+    description: 'Ville, aéroport et déplacements sur Yaoundé.',
+  },
+  { icon: Car, title: 'Parking sécurisé', description: 'Stationnement privé et surveillé.' },
 ];
 
-function SearchBar() {
-  const navigate = useNavigate();
-  const { logements } = useLogements();
-  const [arrivee, setArrivee] = useState('');
-  const [depart, setDepart] = useState('');
-  const [type, setType] = useState('Tous');
-  const types = Array.from(new Set(logements.map((l) => l.type)));
-
-  const search = () => {
-    const p = new URLSearchParams();
-    if (type !== 'Tous') p.set('type', type);
-    if (arrivee) p.set('arrivee', arrivee);
-    if (depart) p.set('depart', depart);
-    navigate(`/catalogue${p.toString() ? `?${p}` : ''}`);
-  };
-
-  return (
-    <div className="glass-card p-4 sm:p-5">
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-[1fr_1fr_1fr_auto] lg:items-center">
-        <div>
-          <label className="mb-1.5 block text-[11px] uppercase tracking-widest text-brand-muted">
-            Arrivée
-          </label>
-          <input type="date" value={arrivee} onChange={(e) => setArrivee(e.target.value)} className="form-input" />
-        </div>
-        <div>
-          <label className="mb-1.5 block text-[11px] uppercase tracking-widest text-brand-muted">
-            Départ
-          </label>
-          <input type="date" value={depart} min={arrivee} onChange={(e) => setDepart(e.target.value)} className="form-input" />
-        </div>
-        <div>
-          <label className="mb-1.5 block text-[11px] uppercase tracking-widest text-brand-muted">
-            Type
-          </label>
-          <select value={type} onChange={(e) => setType(e.target.value)} className="form-input">
-            <option value="Tous">Tous</option>
-            {types.map((t) => (
-              <option key={t} value={t}>{t}</option>
-            ))}
-          </select>
-        </div>
-        <button type="button" onClick={search} className="btn-primary h-11 w-full lg:w-auto">
-          <Search className="h-4 w-4" />
-          Chercher
-        </button>
-      </div>
-    </div>
-  );
-}
-
 export default function Home() {
-  const [slide, setSlide] = useState(0);
   const { logements } = useLogements();
   const featured = logements.filter((l) => l.statut === 'disponible').slice(0, 3);
   const display = featured.length > 0 ? featured : logements.slice(0, 3);
 
-  useEffect(() => {
-    const t = setInterval(() => setSlide((s) => (s + 1) % slides.length), 7000);
-    return () => clearInterval(t);
-  }, []);
-
   return (
-    <main className="bg-brand-white">
-      {/* ── Hero ── */}
-      <section className="relative flex min-h-svh items-center justify-center overflow-hidden">
-        {slides.map((src, i) => (
-          <div
-            key={src}
-            className={`absolute inset-0 bg-cover bg-center transition-opacity duration-[1.4s] ${
-              i === slide ? 'opacity-100' : 'opacity-0'
-            }`}
-            style={{ backgroundImage: `url(${src})` }}
-            aria-hidden={i !== slide}
-          />
-        ))}
-        {/* Overlay uniforme pour lisibilité */}
-        <div className="absolute inset-0 bg-stone-900/45" />
+    <main className="overflow-x-hidden bg-brand-white">
+      {/* ── Hero plein écran — texte en bas, recherche en carte flottante ── */}
+      <section className="relative min-h-[72dvh] min-[480px]:min-h-[80dvh] lg:min-h-svh">
+        <img
+          src={heroPrincipal}
+          alt="LAS MORAS — L'Art de Vivre Naturellement"
+          className="absolute inset-0 h-full w-full object-cover object-[center_30%] sm:object-center"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-stone-950/95 via-stone-900/50 to-stone-900/15 sm:from-stone-950/90 sm:via-stone-900/35" />
+        <div className="absolute inset-0 bg-gradient-to-r from-stone-950/60 via-stone-950/20 to-transparent sm:from-stone-950/50" />
 
-        <div className="relative z-10 mx-auto w-full max-w-6xl px-4 pt-24 pb-32 sm:px-6">
-          <div className="mx-auto max-w-2xl text-center">
-            {/* Texte dans panneau verre — lisible sur toute image */}
-            <div className="glass-on-image mx-auto inline-block text-left sm:text-center">
-              <p className="text-[11px] font-medium uppercase tracking-[0.35em] text-white/70">
-                Résidence meublée · Yaoundé
-              </p>
-              <div className="mt-3 flex justify-center">
-                <BrandName variant="light" size="lg" />
-              </div>
-              <p className="mx-auto mt-4 max-w-md text-sm leading-relaxed text-white/80 sm:text-base">
-                Appartements meublés de standing, chaque espace une destination.
-              </p>
-              <div className="mt-6 flex flex-col items-center justify-center gap-3 sm:flex-row">
-                <Link to="/catalogue" className="btn-accent w-full sm:w-auto">
-                  Nos logements
-                  <ArrowRight className="h-4 w-4" />
-                </Link>
-                <Link to="/a-propos" className="text-sm text-white/60 transition hover:text-white">
-                  En savoir plus →
-                </Link>
-              </div>
+        <div className="relative z-10 mx-auto flex min-h-[72dvh] max-w-6xl flex-col justify-end px-4 pb-8 pt-24 min-[480px]:min-h-[80dvh] min-[480px]:pb-10 sm:px-6 sm:pt-28 lg:min-h-svh lg:pb-40 lg:pt-32">
+          <div className="w-full max-w-xl border-l-2 border-brand-red pl-4 sm:max-w-2xl sm:pl-6">
+            <p className="text-[10px] font-medium uppercase tracking-[0.18em] text-white/60 sm:text-[11px] sm:tracking-[0.3em]">
+              Résidence meublée · Yaoundé
+            </p>
+            <div className="mt-3 sm:mt-4">
+              <BrandName variant="light" size="xl" />
             </div>
-          </div>
-
-          {/* Barre de recherche */}
-          <div className="mx-auto mt-12 max-w-3xl">
-            <SearchBar />
-          </div>
-
-          {/* Indicateurs */}
-          <div className="mt-8 flex justify-center gap-1.5">
-            {slides.map((_, i) => (
-              <button
-                key={i}
-                type="button"
-                onClick={() => setSlide(i)}
-                className={`h-1 rounded-full transition-all duration-300 ${
-                  i === slide ? 'w-6 bg-white' : 'w-1.5 bg-white/40 hover:bg-white/60'
-                }`}
-                aria-label={`Slide ${i + 1}`}
-              />
-            ))}
+            <p className="mt-3 max-w-lg text-sm leading-relaxed text-white/75 sm:mt-4 sm:text-base">
+              Appartements meublés de standing, chaque espace une destination.
+            </p>
+            <div className="mt-5 flex flex-col gap-2.5 min-[400px]:flex-row min-[400px]:flex-wrap min-[400px]:items-center sm:mt-7 sm:gap-3">
+              <Link to="/catalogue" className="btn-accent w-full min-[400px]:w-auto">
+                Nos logements
+                <ArrowRight className="h-4 w-4" />
+              </Link>
+              <Link to="/a-propos" className="btn-glass w-full min-[400px]:w-auto">
+                En savoir plus
+                <ArrowRight className="h-4 w-4" />
+              </Link>
+            </div>
           </div>
         </div>
       </section>
 
+      <section className="relative z-20 px-3 pb-6 pt-4 sm:px-6 sm:pb-8 md:-mt-20 md:pt-0 lg:-mt-28">
+        <div className="mx-auto w-full max-w-4xl rounded-xl border border-stone-200/80 bg-white p-1 shadow-[0_16px_48px_rgba(0,0,0,0.1)] sm:rounded-2xl sm:p-1.5 sm:shadow-[0_24px_64px_rgba(0,0,0,0.12)]">
+          <HeroSearchBar />
+        </div>
+      </section>
+
       {/* ── Intro ── */}
-      <section className="px-4 py-24 sm:px-6">
-        <div className="mx-auto grid max-w-6xl items-center gap-16 lg:grid-cols-2">
+      <section className="px-4 py-16 sm:px-6 sm:py-20 lg:py-24">
+        <div className="mx-auto grid max-w-6xl items-center gap-10 lg:grid-cols-2 lg:gap-16">
           <div>
             <p className="section-label">Bienvenue</p>
             <h2 className="section-title mt-3">
@@ -165,38 +93,38 @@ export default function Home() {
             </Link>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 gap-2 sm:gap-3">
             <img
               src={residenceLasMoras1}
               alt="Intérieur"
-              className="h-52 w-full rounded-2xl object-cover sm:h-64"
+              className="h-36 w-full rounded-xl object-cover min-[400px]:h-44 sm:h-52 sm:rounded-2xl md:h-64"
             />
             <img
               src={residenceLasMoras2}
               alt="Salon"
-              className="mt-8 h-52 w-full rounded-2xl object-cover sm:h-64"
+              className="mt-6 h-36 w-full rounded-xl object-cover min-[400px]:h-44 sm:mt-8 sm:h-52 sm:rounded-2xl md:h-64"
             />
           </div>
         </div>
       </section>
 
       {/* ── Logements ── */}
-      <section className="border-y border-stone-200/60 bg-brand-gray px-4 py-24 sm:px-6">
+      <section className="border-y border-stone-200/60 bg-brand-gray px-4 py-16 sm:px-6 sm:py-20 lg:py-24">
         <div className="mx-auto max-w-6xl">
-          <div className="mb-12 flex items-end justify-between">
-            <div>
+          <div className="mb-8 flex flex-col gap-3 sm:mb-12 sm:flex-row sm:items-end sm:justify-between">
+            <div className="min-w-0">
               <p className="section-label">Catalogue</p>
-              <h2 className="section-title mt-3">Logements disponibles</h2>
+              <h2 className="section-title mt-2 sm:mt-3">Logements disponibles</h2>
             </div>
             <Link
               to="/catalogue"
-              className="hidden text-sm text-brand-muted transition hover:text-brand-dark sm:block"
+              className="hidden shrink-0 text-sm text-brand-muted transition hover:text-brand-dark sm:block"
             >
               Tout voir →
             </Link>
           </div>
 
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3">
             {display.map((l) => (
               <LogementCard key={l.id} logement={l} />
             ))}
@@ -211,22 +139,40 @@ export default function Home() {
       </section>
 
       {/* ── Services ── */}
-      <section className="px-4 py-24 sm:px-6">
+      <section className="px-4 py-16 sm:px-6 sm:py-20 lg:py-24">
         <div className="mx-auto max-w-6xl">
           <p className="section-label text-center">Services</p>
-          <h2 className="section-title mt-3 text-center">L'essentiel, rien de plus</h2>
+          <h2 className="section-title mt-2 text-center sm:mt-3">Tout pour un séjour sans contrainte</h2>
+          <p className="mx-auto mt-3 max-w-lg px-2 text-center text-sm text-brand-muted sm:px-0">
+            Hébergement, confort et mobilité — location de véhicules pour la ville, l'aéroport et vos
+            courses.
+          </p>
 
-          <div className="mx-auto mt-14 grid max-w-2xl grid-cols-2 gap-px overflow-hidden rounded-2xl border border-stone-200/60 bg-stone-200/60 sm:grid-cols-4">
-            {services.map(({ icon: Icon, title }) => (
+          <div className="mx-auto mt-8 grid max-w-4xl grid-cols-1 gap-3 min-[480px]:grid-cols-2 sm:mt-12 sm:gap-4 lg:grid-cols-3">
+            {services.map(({ icon: Icon, title, description }, index) => (
               <div
                 key={title}
-                className="flex flex-col items-center gap-3 bg-white/80 px-4 py-8 backdrop-blur-sm"
+                className={`glass-card flex flex-col items-center gap-3 p-5 text-center sm:p-6 ${
+                  index === services.length - 1
+                    ? 'min-[480px]:col-span-2 min-[480px]:max-w-sm min-[480px]:justify-self-center lg:col-span-1 lg:col-start-2 lg:max-w-none'
+                    : ''
+                }`}
               >
-                <Icon className="h-5 w-5 text-brand-muted" strokeWidth={1.5} />
-                <span className="text-xs text-brand-muted">{title}</span>
+                <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-red-50 text-brand-red">
+                  <Icon className="h-5 w-5" strokeWidth={1.5} />
+                </span>
+                <span className="text-sm font-medium text-brand-dark">{title}</span>
+                <span className="text-xs leading-relaxed text-brand-muted">{description}</span>
               </div>
             ))}
           </div>
+        </div>
+      </section>
+
+      {/* ── Avis Google ── */}
+      <section className="px-4 py-16 sm:px-6 sm:py-20 lg:py-24">
+        <div className="mx-auto max-w-6xl">
+          <GoogleReviews />
         </div>
       </section>
 
@@ -235,12 +181,12 @@ export default function Home() {
         <img
           src={residenceLasMoras}
           alt="Résidence LAS MORAS"
-          className="h-80 w-full object-cover sm:h-96"
+          className="h-56 w-full object-cover min-[400px]:h-72 sm:h-80 md:h-96"
         />
         <div className="absolute inset-0 bg-stone-900/50" />
-        <div className="absolute inset-0 flex items-center justify-center p-6">
-          <div className="glass-on-image max-w-lg text-center">
-            <p className="text-base font-medium leading-relaxed sm:text-lg">
+        <div className="absolute inset-0 flex items-center justify-center p-4 sm:p-6">
+          <div className="glass-on-image w-full max-w-lg px-4 py-4 text-center sm:px-6 sm:py-5">
+            <p className="text-sm font-medium leading-relaxed min-[400px]:text-base sm:text-lg">
               « Chaque porte ouvre sur une nouvelle destination. »
             </p>
             <p className="mt-3 text-xs tracking-widest text-brand-red uppercase">
@@ -250,24 +196,34 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── CTA minimal ── */}
-      <section className="px-4 py-24 sm:px-6">
+      {/* ── FAQ (aperçu) ── */}
+      <section className="border-t border-stone-200/60 bg-brand-gray px-4 py-16 sm:px-6 sm:py-20 lg:py-24">
         <div className="mx-auto max-w-6xl">
-          <div className="glass-card flex flex-col items-center justify-between gap-8 p-10 text-center sm:flex-row sm:text-left">
-            <div>
+          <FaqSection
+            items={faqItems}
+            description="Les réponses aux questions les plus posées avant de réserver."
+          />
+        </div>
+      </section>
+
+      {/* ── CTA minimal ── */}
+      <section className="px-4 py-16 sm:px-6 sm:py-20 lg:py-24">
+        <div className="mx-auto max-w-6xl">
+          <div className="glass-card flex flex-col items-center justify-between gap-6 p-6 text-center sm:gap-8 sm:p-8 sm:text-left md:flex-row md:p-10">
+            <div className="min-w-0">
               <p className="section-label">Réserver</p>
               <h2 className="section-title mt-2">Prêt pour votre séjour ?</h2>
               <p className="mt-2 text-sm text-brand-muted">
                 Contactez-nous ou parcourez le catalogue en ligne.
               </p>
             </div>
-            <div className="flex flex-col gap-3 sm:flex-row">
-              <Link to="/catalogue" className="btn-accent">Voir les logements</Link>
+            <div className="flex w-full flex-col gap-2.5 sm:w-auto sm:flex-row sm:gap-3">
+              <Link to="/catalogue" className="btn-accent w-full sm:w-auto">Voir les logements</Link>
               <a
                 href="https://wa.me/237689888291"
                 target="_blank"
                 rel="noreferrer"
-                className="btn-ghost"
+                className="btn-ghost w-full sm:w-auto"
               >
                 WhatsApp
               </a>

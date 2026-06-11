@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { CheckCheck, Mail, MailOpen, Search, Trash2 } from 'lucide-react';
+import AdminPageHeader from '../../components/admin/AdminPageHeader';
 import { useMessages } from '../../hooks/useMessages';
 
 export default function ManageContacts() {
@@ -37,21 +38,16 @@ export default function ManageContacts() {
 
   return (
     <div className="mx-auto max-w-7xl">
-      <div className="mb-8 flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
-        <div>
-          <h1 className="text-3xl font-extrabold tracking-tight text-brand-dark">
-            Messages de contact
-          </h1>
-          <p className="mt-2 text-sm font-medium text-gray-500">
-            Consultez et traitez les demandes envoyées depuis le formulaire public.
-          </p>
-        </div>
-        <div className="flex flex-col gap-3 sm:flex-row">
+      <AdminPageHeader
+        title="Messages de contact"
+        description="Consultez et traitez les demandes envoyées depuis le formulaire public."
+        actions={
+          <>
           <button
             type="button"
             onClick={() => markAllMessagesAsRead.mutate()}
             disabled={unreadCount === 0}
-            className="inline-flex items-center justify-center gap-2 rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm font-bold text-gray-700 shadow-sm transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
+            className="admin-btn-secondary disabled:cursor-not-allowed disabled:opacity-50"
           >
             <CheckCheck className="h-4 w-4" />
             Tout marquer lu
@@ -60,15 +56,16 @@ export default function ManageContacts() {
             type="button"
             onClick={() => deleteReadMessages.mutate()}
             disabled={readCount === 0}
-            className="inline-flex items-center justify-center gap-2 rounded-lg border border-red-100 bg-red-50 px-4 py-3 text-sm font-bold text-brand-red transition hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-50"
+            className="admin-btn-secondary border-red-100 bg-red-50 text-brand-red hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-50"
           >
             <Trash2 className="h-4 w-4" />
             Supprimer les lus
           </button>
-        </div>
-      </div>
+          </>
+        }
+      />
 
-      <div className="mb-6 grid gap-4 rounded-lg border border-gray-100 bg-white p-4 shadow-sm md:grid-cols-[1fr_180px]">
+      <div className="admin-card mb-6 grid gap-4 p-4 md:grid-cols-[1fr_180px]">
         <label className="relative block">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
           <input

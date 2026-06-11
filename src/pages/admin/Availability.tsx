@@ -1,8 +1,10 @@
 import { useMemo, useState } from 'react';
 import { CalendarDays, CheckCircle, XCircle } from 'lucide-react';
+import AdminPageHeader from '../../components/admin/AdminPageHeader';
 import { rangesOverlap } from '../../utils/helpers';
 import { useLogements } from '../../hooks/useLogements';
 import { useReservations } from '../../hooks/useReservations';
+import { formatDateFr } from '../../utils/availability';
 
 export default function Availability() {
   const { logements } = useLogements();
@@ -18,8 +20,7 @@ export default function Availability() {
         const blockingReservation = reservations.find(
           (reservation) =>
             reservation.logement_id === logement.id &&
-            (reservation.statut_reservation === 'confirmee' ||
-              reservation.statut_reservation === 'en_cours') &&
+            ['demande', 'confirmee', 'en_cours'].includes(reservation.statut_reservation) &&
             rangesOverlap(dateArrivee, dateDepart, reservation.date_arrivee, reservation.date_depart),
         );
 
@@ -29,7 +30,13 @@ export default function Availability() {
           logement,
           blockingReservation,
           available: !unavailable,
-          reason: logement.statut === 'maintenance' ? 'Maintenance' : blockingReservation ? 'Réservé' : 'Libre',
+          reason: logement.statut === 'maintenance'
+            ? 'Maintenance'
+            : blockingReservation
+              ? blockingReservation.statut_reservation === 'demande'
+                ? 'Demande en attente'
+                : 'Réservé'
+              : 'Libre',
         };
       }),
     [dateArrivee, dateDepart, logements, reservations],
@@ -39,41 +46,41 @@ export default function Availability() {
 
   return (
     <div className="mx-auto max-w-7xl">
-      <div className="mb-8">
-        <h1 className="text-3xl font-extrabold tracking-tight text-brand-dark">Disponibilités</h1>
-        <p className="mt-2 text-sm font-medium text-gray-500">
-          Vérifiez les logements libres pour une période donnée.
-        </p>
-      </div>
+      <AdminPageHeader
+        title="Disponibilités"
+        description="Vérifiez quels logements sont libres pour une période donnée."
+      />
 
-      <div className="mb-6 grid gap-4 rounded-lg border border-gray-100 bg-white p-5 shadow-sm md:grid-cols-[1fr_1fr_auto] md:items-end">
-        <label className="grid gap-2 text-sm font-bold text-gray-700">
-          Arrivée
+      <div className="admin-card mb-6 grid gap-4 p-5 md:grid-cols-[1fr_1fr_auto] md:items-end">
+        <label className="grid gap-1.5">
+          <span className="text-[11px] font-medium uppercase tracking-widest text-brand-muted">Arrivée</span>
           <input
             type="date"
             value={dateArrivee}
             onChange={(event) => setDateArrivee(event.target.value)}
-            className="h-12 rounded-lg bg-gray-50 px-4 font-medium outline-none ring-1 ring-gray-200 focus:ring-2 focus:ring-brand-red"
+            className="form-input"
           />
         </label>
-        <label className="grid gap-2 text-sm font-bold text-gray-700">
-          Départ
+        <label className="grid gap-1.5">
+          <span className="text-[11px] font-medium uppercase tracking-widest text-brand-muted">
+            Départ <span className="normal-case tracking-normal text-brand-muted/70">(optionnel)</span>
+          </span>
           <input
             type="date"
             min={dateArrivee}
             value={dateDepart}
             onChange={(event) => setDateDepart(event.target.value)}
-            className="h-12 rounded-lg bg-gray-50 px-4 font-medium outline-none ring-1 ring-gray-200 focus:ring-2 focus:ring-brand-red"
+            className="form-input"
           />
         </label>
-        <div className="rounded-lg bg-green-50 px-5 py-3 text-sm font-black text-green-700 ring-1 ring-green-100">
+        <div className="flex h-11 items-center justify-center rounded-xl bg-green-50 px-5 text-sm font-semibold text-green-700">
           {availableCount} libre{availableCount > 1 ? 's' : ''}
         </div>
       </div>
 
       <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
         {rows.map(({ logement, blockingReservation, available, reason }) => (
-          <div key={logement.id} className="overflow-hidden rounded-lg border border-gray-100 bg-white shadow-sm">
+          <div key={logement.id} className="admin-card overflow-hidden">
             <img src={logement.photos[0]} alt={logement.nom} className="h-44 w-full object-cover" />
             <div className="p-5">
               <div className="mb-4 flex items-start justify-between gap-4">
@@ -106,8 +113,8 @@ export default function Availability() {
                   </div>
                   <p>{blockingReservation.client_nom}</p>
                   <p>
-                    {new Date(blockingReservation.date_arrivee).toLocaleDateString('fr-FR')} -{' '}
-                    {new Date(blockingReservation.date_depart).toLocaleDateString('fr-FR')}
+                    {formatDateFr(blockingReservation.date_arrivee)} —{' '}
+                    {formatDateFr(blockingReservation.date_depart)}
                   </p>
                 </div>
               )}
