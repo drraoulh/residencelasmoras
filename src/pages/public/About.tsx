@@ -42,7 +42,7 @@ export default function About() {
     <main className="bg-brand-white">
       {/* Hero */}
       <section className="relative flex min-h-[55vh] items-center justify-center overflow-hidden">
-        <img src={vueResidence} alt="LAS MORAS" className="absolute inset-0 h-full w-full object-cover" />
+        <img src={vueResidence} alt="LAS MORAS" className="absolute inset-0 h-full w-full object-cover object-top" />
         <div className="absolute inset-0 bg-stone-900/50" />
         <div className="relative z-10 mx-auto max-w-6xl px-4 pt-28 pb-16 text-center sm:px-6">
           <div className="glass-on-image mx-auto inline-block">
@@ -209,6 +209,7 @@ export default function About() {
           <FaqSection
             id="faq"
             items={faqItems}
+            showContactCta
             description="Tout ce qu'il faut savoir avant de réserver votre séjour à LAS MORAS."
           />
         </div>

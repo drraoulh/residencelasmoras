@@ -73,7 +73,7 @@ export default function GoogleReviews({ limit, className = '' }: GoogleReviewsPr
 
       <div className="mx-auto mt-8 grid max-w-6xl gap-4 sm:mt-10 sm:grid-cols-2 lg:gap-5">
         {displayed.map((review) => (
-          <article key={review.id} className="glass-card flex flex-col p-5 sm:p-6">
+          <article key={review.id} className="glass-card-neutral flex flex-col p-5 sm:p-6">
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
                 <p className="text-sm font-medium text-brand-dark">{review.author}</p>

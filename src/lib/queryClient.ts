@@ -18,4 +18,5 @@ export const liveQueryKeys = [
   ['reservations'],
   ['availability-slots'],
   ['messages'],
+  ['gallery'],
 ] as const;

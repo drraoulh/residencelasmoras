@@ -6,6 +6,7 @@ import LogementCard from '../../components/properties/LogementCard';
 import { useAvailabilitySlots } from '../../hooks/useAvailabilitySlots';
 import { useLogements } from '../../hooks/useLogements';
 import { formatSearchPeriod, getLogementAvailability } from '../../utils/availability';
+import residenceLasMoras1 from '../../assets/residencelasmoras1.jpeg';
 
 function todayIso() {
   return new Date().toISOString().slice(0, 10);
@@ -94,17 +95,25 @@ export default function LogementsList() {
 
   return (
     <div className="min-h-screen bg-brand-gray">
-      <section className="bg-brand-dark px-4 py-14 text-white sm:px-6 lg:px-8">
-        <div className="mx-auto max-w-7xl">
-          <p className="section-label mb-3 text-red-400">Catalogue</p>
-          <h1 className="text-3xl font-bold sm:text-4xl md:text-5xl">
-            Nos <span className="text-brand-red">résidences</span>
+      <section className="relative flex min-h-[45vh] items-center overflow-hidden sm:min-h-[50vh]">
+        <img
+          src={residenceLasMoras1}
+          alt="Appartements meublés LAS MORAS"
+          className="absolute inset-0 h-full w-full object-cover object-center"
+        />
+        <div className="absolute inset-0 bg-stone-900/55" />
+        <div className="absolute inset-0 bg-gradient-to-r from-stone-950/70 via-stone-900/40 to-transparent" />
+
+        <div className="relative z-10 mx-auto w-full max-w-7xl px-4 py-28 sm:px-6 lg:px-8">
+          <p className="section-label !text-white/60">Catalogue</p>
+          <h1 className="section-title mt-2 text-white sm:mt-3">
+            Nos <span className="text-brand-red">logements</span>
           </h1>
-          <p className="mt-4 max-w-2xl text-lg leading-relaxed text-gray-400">
+          <p className="mt-4 max-w-2xl text-sm leading-relaxed text-white/75 sm:text-base">
             Découvrez notre sélection d'appartements et studios haut de gamme à Yaoundé.
           </p>
           {hasDateSearch && (
-            <div className="mt-6 inline-flex items-center gap-2 rounded-xl bg-white/10 px-4 py-2 text-sm backdrop-blur-sm">
+            <div className="mt-6 inline-flex items-center gap-2 rounded-xl border border-white/15 bg-black/25 px-4 py-2.5 text-sm text-white backdrop-blur-md">
               <CalendarDays className="h-4 w-4 text-brand-red" />
               <span>{formatSearchPeriod(dateArrivee, dateDepart || undefined)}</span>
               <span className="text-white/70">

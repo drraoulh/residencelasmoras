@@ -120,10 +120,10 @@ function SocialIcon({ type }: { type: (typeof socials)[number]['type'] }) {
 export default function Footer() {
   return (
     <footer className="border-t border-stone-200/80 bg-brand-gray">
-      <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6 sm:py-16 lg:px-8">
-        <div className="grid grid-cols-1 gap-10 sm:gap-12 md:grid-cols-2 lg:grid-cols-12 lg:gap-x-10 lg:gap-y-0">
+      <div className="mx-auto max-w-6xl px-4 py-12 sm:px-8 sm:py-16 lg:px-10 xl:px-12">
+        <div className="grid grid-cols-1 gap-10 sm:gap-12 md:grid-cols-2 lg:grid-cols-3 lg:gap-x-14 lg:gap-y-0 xl:gap-x-20">
           {/* Marque */}
-          <div className="space-y-4 md:col-span-2 lg:col-span-4 lg:pr-4">
+          <div className="space-y-4 md:col-span-2 lg:col-span-1">
             <div className="flex items-center gap-3">
               <img
                 src={logoLasmoras}
@@ -143,7 +143,7 @@ export default function Footer() {
           </div>
 
           {/* Navigation */}
-          <div className="md:col-span-1 lg:col-span-3 lg:pl-2">
+          <div className="md:col-span-1 lg:col-span-1">
             <p className="section-label !mb-4 !text-brand-red">Navigation</p>
             <nav className="flex flex-col gap-0.5">
               {navLinks.map(({ to, label, icon: Icon }) => (
@@ -162,7 +162,7 @@ export default function Footer() {
           </div>
 
           {/* Contact */}
-          <div className="md:col-span-1 lg:col-span-5">
+          <div className="md:col-span-1 lg:col-span-1">
             <p className="section-label !mb-4 !text-brand-red">Contact</p>
             <div className="space-y-1">
               {contactItems.map(({ icon: Icon, label, value, href, external }) => (
@@ -213,7 +213,7 @@ export default function Footer() {
 
       {/* Copyright */}
       <div className="border-t border-stone-200/60 bg-white/40">
-        <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 px-4 py-6 text-center sm:flex-row sm:px-6 sm:text-left lg:px-8">
+        <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 px-4 py-6 text-center sm:flex-row sm:px-8 sm:text-left lg:px-10 xl:px-12">
           <p className="flex max-w-full flex-wrap items-center justify-center gap-x-2 gap-y-1.5 text-xs leading-relaxed text-brand-muted sm:justify-start">
             <MapPin className="h-3.5 w-3.5 shrink-0 text-brand-red" strokeWidth={1.5} />
             <span>© {new Date().getFullYear()} LAS MORAS — L'Art de Vivre Naturellement</span>

@@ -13,6 +13,7 @@ import Availability from './pages/admin/Availability';
 import Dashboard from './pages/admin/Dashboard';
 import Login from './pages/admin/Login';
 import ManageContacts from './pages/admin/ManageContacts';
+import ManageGallery from './pages/admin/ManageGallery';
 import ManageProperties from './pages/admin/ManageProperties';
 import ManageReservations from './pages/admin/ManageReservations';
 import Reports from './pages/admin/Reports';
@@ -88,6 +89,7 @@ function App() {
               <Route path="reservations" element={<ManageReservations />} />
               <Route path="disponibilites" element={<Availability />} />
               <Route path="rapports" element={<Reports />} />
+              <Route path="galerie" element={<ManageGallery />} />
               <Route path="contacts" element={<ManageContacts />} />
             </Route>
 

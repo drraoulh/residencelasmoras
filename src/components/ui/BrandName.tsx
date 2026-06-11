@@ -21,7 +21,7 @@ export default function BrandName({
 
   return (
     <div className={className}>
-      <p className={`font-semibold tracking-wide ${nameColor} ${s.name}`}>LAS MORAS</p>
+      <p className={`font-heading font-semibold uppercase tracking-wide ${nameColor} ${s.name}`}>LAS MORAS</p>
       <p className={`font-medium uppercase tracking-[0.18em] text-brand-red ${s.tagline}`}>
         L'Art de Vivre Naturellement
       </p>

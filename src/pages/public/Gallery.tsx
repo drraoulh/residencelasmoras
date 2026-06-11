@@ -2,22 +2,21 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, X } from 'lucide-react';
 import BrandName from '../../components/ui/BrandName';
-import {
-  galleryCategories,
-  galleryImages,
-  type GalleryCategory,
-  type GalleryImage,
-} from '../../data/galleryImages';
+import { galleryCategories, toGalleryViewModel } from '../../data/galleryImages';
+import { useGallery } from '../../hooks/useGallery';
+import type { GalleryCategory } from '../../types';
 import vueResidence from '../../assets/Vue residence.jpeg';
 
+type GalleryViewItem = ReturnType<typeof toGalleryViewModel>[number];
+
 export default function Gallery() {
+  const { galleryImages, isLoading } = useGallery();
+  const items = toGalleryViewModel(galleryImages);
   const [filter, setFilter] = useState<GalleryCategory | 'Tous'>('Tous');
-  const [lightbox, setLightbox] = useState<GalleryImage | null>(null);
+  const [lightbox, setLightbox] = useState<GalleryViewItem | null>(null);
 
   const filtered =
-    filter === 'Tous'
-      ? galleryImages
-      : galleryImages.filter((img) => img.category === filter);
+    filter === 'Tous' ? items : items.filter((img) => img.category === filter);
 
   return (
     <main className="bg-brand-white">
@@ -26,7 +25,7 @@ export default function Gallery() {
         <img
           src={vueResidence}
           alt="Galerie LAS MORAS"
-          className="absolute inset-0 h-full w-full object-cover"
+          className="absolute inset-0 h-full w-full object-cover object-top"
         />
         <div className="absolute inset-0 bg-stone-900/50" />
         <div className="relative z-10 mx-auto max-w-6xl px-4 pt-28 pb-16 text-center sm:px-6">
@@ -47,7 +46,7 @@ export default function Gallery() {
         <div className="mx-auto max-w-6xl">
           <div className="mb-10 flex flex-wrap items-center justify-between gap-4">
             <p className="text-sm text-brand-muted">
-              {filtered.length} photo{filtered.length > 1 ? 's' : ''}
+              {isLoading ? 'Chargement…' : `${filtered.length} photo${filtered.length > 1 ? 's' : ''}`}
             </p>
             <div className="flex flex-wrap gap-2">
               {(['Tous', ...galleryCategories] as const).map((cat) => (
@@ -70,7 +69,7 @@ export default function Gallery() {
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {filtered.map((img) => (
               <button
-                key={img.label}
+                key={img.id}
                 type="button"
                 onClick={() => setLightbox(img)}
                 className="group relative aspect-[4/3] overflow-hidden rounded-2xl text-left"

@@ -6,6 +6,7 @@ import {
   CalendarDays,
   ExternalLink,
   Home,
+  Images,
   Inbox,
   LayoutDashboard,
   LogOut,
@@ -20,6 +21,7 @@ import logoLasmoras from '../../assets/logo lasmoras.jpeg';
 const navItems = [
   { name: 'Tableau de bord', path: '/admin/dashboard', icon: LayoutDashboard },
   { name: 'Logements', path: '/admin/logements', icon: Home },
+  { name: 'Galerie', path: '/admin/galerie', icon: Images },
   { name: 'Réservations', path: '/admin/reservations', icon: CalendarCheck },
   { name: 'Planning', path: '/admin/disponibilites', icon: CalendarDays },
   { name: 'Rapports', path: '/admin/rapports', icon: BarChart3 },

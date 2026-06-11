@@ -1,32 +1,52 @@
+export type FaqCategory = 'Hébergement' | 'Services' | 'Réservation' | 'Pratique';
+
 export interface FaqItem {
   question: string;
   answer: string;
+  category: FaqCategory;
 }
 
 export const faqItems: FaqItem[] = [
   {
-    question: 'Quels types d\'hébergements propose Las-Moras ?',
+    category: 'Hébergement',
+    question: 'Quels types de logements propose LAS MORAS ?',
     answer:
-      'Las-Moras met à votre disposition des studios, chambres et appartements meublés entièrement équipés, conçus pour offrir confort, intimité et sérénité lors de vos séjours de courte ou longue durée.',
+      'Nous proposons des studios, chambres et appartements meublés entièrement équipés. Chaque logement possède une identité propre, inspirée de destinations du monde — Cappadocia, Cancun, Galápagos et d\'autres univers thématiques.',
   },
   {
-    question: 'Quels services sont inclus dans votre réservation ?',
+    category: 'Services',
+    question: 'Quels services sont inclus dans la réservation ?',
     answer:
-      'Toutes nos locations incluent le Wi-Fi haut débit, Canal+, l\'eau, la sécurité 24h/24 avec vidéosurveillance, ainsi que des équipements modernes pour un séjour agréable.',
+      'Wi-Fi fibre, IPTV, eau, climatisation, sécurité 24h/24 avec vidéosurveillance et parking sécurisé. Location de voitures disponible sur demande pour vos déplacements à Yaoundé (ville, aéroport, courses).',
   },
   {
-    question: 'Où est située la résidence Las-Moras ?',
+    category: 'Pratique',
+    question: 'Où se situe la résidence ?',
     answer:
-      'La résidence est située au carrefour Nkolzie, Mendong, dans la ville de Yaoundé, dans un environnement calme et facilement accessible.',
+      'LAS MORAS est au carrefour Nkolzie, Mendong, à Yaoundé — un quartier calme, bien desservi et facile d\'accès. Un lien Google Maps est disponible sur la page Contact pour préparer votre itinéraire.',
   },
   {
-    question: 'Comment effectuer une réservation ?',
+    category: 'Réservation',
+    question: 'Comment réserver un séjour ?',
     answer:
-      'Vous pouvez réserver en nous contactant directement par téléphone ou via nos plateformes de communication. Notre équipe vous accompagne pour vérifier les disponibilités et confirmer votre séjour rapidement.',
+      'Parcourez le catalogue en ligne, choisissez vos dates et envoyez une demande de réservation. Vous pouvez aussi nous contacter par WhatsApp au +237 6 89 88 82 91 ou via le formulaire Contact. Notre équipe vérifie les disponibilités et vous confirme rapidement.',
   },
   {
-    question: 'Pourquoi choisir Las-Moras ?',
+    category: 'Réservation',
+    question: 'Quels sont les horaires d\'arrivée et de départ ?',
     answer:
-      'Chez Las-Moras, nous vous offrons bien plus qu\'un hébergement : un cadre sécurisé, un confort de qualité, une connexion internet performante et une expérience unique inspirée de différentes destinations du monde. Notre slogan : « L\'art de vivre naturellement ».',
+      'L\'arrivée est généralement à partir de 14h et le départ avant 12h. Pour un early check-in ou un late check-out, contactez-nous à l\'avance : nous faisons notre possible pour accommoder votre planning.',
+  },
+  {
+    category: 'Réservation',
+    question: 'Quels moyens de paiement acceptez-vous ?',
+    answer:
+      'Espèces, Mobile Money, virement bancaire et carte selon les cas. Un acompte peut être demandé pour confirmer la réservation. Le solde se règle selon les conditions communiquées par notre équipe lors de la confirmation.',
+  },
+  {
+    category: 'Hébergement',
+    question: 'Pourquoi choisir LAS MORAS ?',
+    answer:
+      'Le confort d\'un hôtel de standing avec l\'intimité d\'une résidence privée. Cadre sécurisé, logements décorés avec soin, connexion performante et accueil attentif 7j/7. Notre promesse : « L\'Art de Vivre Naturellement ».',
   },
 ];

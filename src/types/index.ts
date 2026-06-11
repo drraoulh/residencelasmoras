@@ -16,6 +16,28 @@ export interface Logement {
   equipements?: string[];
 }
 
+export type GalleryCategory = 'Résidence' | 'Intérieurs' | 'Ambiance';
+
+export interface GalleryImage {
+  id: string;
+  label: string;
+  category: GalleryCategory;
+  image_url: string;
+  storage_path?: string | null;
+  sort_order?: number;
+  visible?: boolean;
+  created_at?: string;
+}
+
+export interface GalleryImageDraft {
+  label: string;
+  category: GalleryCategory;
+  image_url: string;
+  storage_path?: string | null;
+  sort_order?: number;
+  visible?: boolean;
+}
+
 export interface ContactMessage {
   id: string;
   nom: string;

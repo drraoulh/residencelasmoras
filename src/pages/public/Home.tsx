@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { ArrowRight, Car, CarFront, ShieldCheck, Wifi, Wind } from 'lucide-react';
+import { ArrowRight, Car, CarFront, ShieldCheck, Tv, Wifi, Wind } from 'lucide-react';
 import HeroSearchBar from '../../components/search/HeroSearchBar';
 import BrandName from '../../components/ui/BrandName';
 import FaqSection from '../../components/ui/FaqSection';
@@ -7,13 +7,15 @@ import GoogleReviews from '../../components/ui/GoogleReviews';
 import { faqItems } from '../../data/faq';
 import LogementCard from '../../components/properties/LogementCard';
 import { useLogements } from '../../hooks/useLogements';
-import heroPrincipal from '../../assets/heroVue face.png';
-import residenceLasMoras from '../../assets/residencelasmoras.jpeg';
-import residenceLasMoras1 from '../../assets/residencelasmoras1.jpeg';
-import residenceLasMoras2 from '../../assets/residencelasmoras2.jpeg';
+import { useGallery } from '../../hooks/useGallery';
+import { pickFeaturedLogementsByType } from '../../utils/logements';
+import { toGalleryViewModel } from '../../data/galleryImages';
+import heroPrincipal from '../../assets/residencelasmoras3.jpeg';
+import vueResidence from '../../assets/Vue residence.jpeg';
 
 const services = [
   { icon: Wifi, title: 'Wi-Fi fibre', description: 'Connexion stable pour travailler et streamer.' },
+  { icon: Tv, title: 'IPTV', description: 'Chaînes TV et divertissement sur grand écran.' },
   { icon: ShieldCheck, title: 'Sécurité 24/7', description: 'Accès contrôlé et présence sur site.' },
   { icon: Wind, title: 'Climatisation', description: 'Confort thermique dans chaque logement.' },
   {
@@ -26,8 +28,11 @@ const services = [
 
 export default function Home() {
   const { logements } = useLogements();
-  const featured = logements.filter((l) => l.statut === 'disponible').slice(0, 3);
-  const display = featured.length > 0 ? featured : logements.slice(0, 3);
+  const { galleryImages } = useGallery();
+  const display = pickFeaturedLogementsByType(logements, 3);
+  const welcomeGalleryPreview = toGalleryViewModel(galleryImages)
+    .filter((img) => img.category === 'Intérieurs')
+    .slice(0, 2);
 
   return (
     <main className="overflow-x-hidden bg-brand-white">
@@ -93,17 +98,36 @@ export default function Home() {
             </Link>
           </div>
 
-          <div className="grid grid-cols-2 gap-2 sm:gap-3">
-            <img
-              src={residenceLasMoras1}
-              alt="Intérieur"
-              className="h-36 w-full rounded-xl object-cover min-[400px]:h-44 sm:h-52 sm:rounded-2xl md:h-64"
-            />
-            <img
-              src={residenceLasMoras2}
-              alt="Salon"
-              className="mt-6 h-36 w-full rounded-xl object-cover min-[400px]:h-44 sm:mt-8 sm:h-52 sm:rounded-2xl md:h-64"
-            />
+          <div className="grid grid-cols-2 gap-3">
+            {welcomeGalleryPreview.map((img, index) => (
+              <Link
+                key={img.id}
+                to="/galerie"
+                className={`group relative overflow-hidden rounded-2xl ${
+                  index === 0 ? 'h-48 sm:h-56' : 'col-start-2 mt-8 h-40 sm:h-48'
+                }`}
+              >
+                <img
+                  src={img.src}
+                  alt={img.label}
+                  className="h-full w-full object-cover transition duration-700 group-hover:scale-105"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent" />
+                <div className="absolute bottom-0 left-0 right-0 p-3 sm:p-4">
+                  <span className="text-[10px] font-medium uppercase tracking-widest text-brand-red">
+                    {img.category}
+                  </span>
+                  <p className="mt-0.5 text-sm font-medium text-white">{img.label}</p>
+                </div>
+              </Link>
+            ))}
+            <Link
+              to="/galerie"
+              className="col-start-2 row-start-2 mt-8 flex h-40 flex-col items-center justify-center rounded-2xl border border-dashed border-stone-300 bg-brand-gray text-center transition hover:border-brand-red sm:h-48"
+            >
+              <span className="text-sm font-medium text-brand-dark">Voir la galerie</span>
+              <ArrowRight className="mt-2 h-4 w-4 text-brand-red" />
+            </Link>
           </div>
         </div>
       </section>
@@ -149,14 +173,10 @@ export default function Home() {
           </p>
 
           <div className="mx-auto mt-8 grid max-w-4xl grid-cols-1 gap-3 min-[480px]:grid-cols-2 sm:mt-12 sm:gap-4 lg:grid-cols-3">
-            {services.map(({ icon: Icon, title, description }, index) => (
+            {services.map(({ icon: Icon, title, description }) => (
               <div
                 key={title}
-                className={`glass-card flex flex-col items-center gap-3 p-5 text-center sm:p-6 ${
-                  index === services.length - 1
-                    ? 'min-[480px]:col-span-2 min-[480px]:max-w-sm min-[480px]:justify-self-center lg:col-span-1 lg:col-start-2 lg:max-w-none'
-                    : ''
-                }`}
+                className="glass-card flex flex-col items-center gap-3 p-5 text-center sm:p-6"
               >
                 <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-red-50 text-brand-red">
                   <Icon className="h-5 w-5" strokeWidth={1.5} />
@@ -179,9 +199,9 @@ export default function Home() {
       {/* ── Citation + image ── */}
       <section className="relative overflow-hidden">
         <img
-          src={residenceLasMoras}
-          alt="Résidence LAS MORAS"
-          className="h-56 w-full object-cover min-[400px]:h-72 sm:h-80 md:h-96"
+          src={vueResidence}
+          alt="Vue panoramique — Résidence LAS MORAS"
+          className="h-56 w-full object-cover object-center min-[400px]:h-72 sm:h-80 md:h-96"
         />
         <div className="absolute inset-0 bg-stone-900/50" />
         <div className="absolute inset-0 flex items-center justify-center p-4 sm:p-6">
@@ -201,6 +221,8 @@ export default function Home() {
         <div className="mx-auto max-w-6xl">
           <FaqSection
             items={faqItems}
+            limit={4}
+            showAllLink
             description="Les réponses aux questions les plus posées avant de réserver."
           />
         </div>
