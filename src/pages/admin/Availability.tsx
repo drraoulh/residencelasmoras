@@ -1,9 +1,12 @@
 import { useMemo, useState } from 'react';
 import { CalendarDays, CheckCircle, XCircle } from 'lucide-react';
-import { rangesOverlap, useLocalStorageStore } from '../../hooks/useLocalStorageStore';
+import { rangesOverlap } from '../../utils/helpers';
+import { useLogements } from '../../hooks/useLogements';
+import { useReservations } from '../../hooks/useReservations';
 
 export default function Availability() {
-  const { logements, reservations } = useLocalStorageStore();
+  const { logements } = useLogements();
+  const { reservations } = useReservations();
   const today = new Date().toISOString().slice(0, 10);
   const tomorrow = new Date(Date.now() + 86_400_000).toISOString().slice(0, 10);
   const [dateArrivee, setDateArrivee] = useState(today);
@@ -14,10 +17,10 @@ export default function Availability() {
       logements.map((logement) => {
         const blockingReservation = reservations.find(
           (reservation) =>
-            reservation.logementId === logement.id &&
-            (reservation.statutReservation === 'confirmee' ||
-              reservation.statutReservation === 'en_cours') &&
-            rangesOverlap(dateArrivee, dateDepart, reservation.dateArrivee, reservation.dateDepart),
+            reservation.logement_id === logement.id &&
+            (reservation.statut_reservation === 'confirmee' ||
+              reservation.statut_reservation === 'en_cours') &&
+            rangesOverlap(dateArrivee, dateDepart, reservation.date_arrivee, reservation.date_depart),
         );
 
         const unavailable = logement.statut === 'maintenance' || Boolean(blockingReservation);
@@ -101,10 +104,10 @@ export default function Availability() {
                     <CalendarDays className="h-4 w-4" />
                     Réservation existante
                   </div>
-                  <p>{blockingReservation.clientNom}</p>
+                  <p>{blockingReservation.client_nom}</p>
                   <p>
-                    {new Date(blockingReservation.dateArrivee).toLocaleDateString('fr-FR')} -{' '}
-                    {new Date(blockingReservation.dateDepart).toLocaleDateString('fr-FR')}
+                    {new Date(blockingReservation.date_arrivee).toLocaleDateString('fr-FR')} -{' '}
+                    {new Date(blockingReservation.date_depart).toLocaleDateString('fr-FR')}
                   </p>
                 </div>
               )}

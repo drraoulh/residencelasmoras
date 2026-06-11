@@ -11,7 +11,6 @@ export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
 
   if (isAuthenticated) {
     return <Navigate to="/admin/dashboard" replace />;
@@ -20,7 +19,6 @@ export default function Login() {
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setError('');
-    setIsLoading(true);
 
     const { error: authError } = await supabase.auth.signInWithPassword({
       email,
@@ -29,7 +27,6 @@ export default function Login() {
 
     if (authError) {
       setError('Email ou mot de passe incorrect. (Ou config .env manquante)');
-      setIsLoading(false);
     } else {
       navigate('/admin/dashboard');
     }

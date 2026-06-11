@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Menu, X } from 'lucide-react';
 import BrandName from '../ui/BrandName';
@@ -15,6 +15,8 @@ const navLinks = [
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [headerHeight, setHeaderHeight] = useState(72);
+  const headerRef = useRef<HTMLElement>(null);
   const location = useLocation();
 
   const isHome = location.pathname === '/';
@@ -23,6 +25,7 @@ export default function Navbar() {
   const isActive = (path: string) =>
     path === '/' ? location.pathname === '/' : location.pathname.startsWith(path);
 
+  /* Scroll listener */
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 60);
     window.addEventListener('scroll', onScroll, { passive: true });
@@ -30,8 +33,23 @@ export default function Navbar() {
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
+  /* Measure real header height on mount and on resize/scroll state change */
+  useEffect(() => {
+    const measure = () => {
+      if (headerRef.current) {
+        setHeaderHeight(headerRef.current.offsetHeight);
+      }
+    };
+    measure();
+    const ro = new ResizeObserver(measure);
+    if (headerRef.current) ro.observe(headerRef.current);
+    return () => ro.disconnect();
+  }, [scrolled]);
+
+  /* Close menu on route change */
   useEffect(() => setIsOpen(false), [location.pathname]);
 
+  /* Lock body scroll when menu open */
   useEffect(() => {
     document.body.style.overflow = isOpen ? 'hidden' : '';
     return () => { document.body.style.overflow = ''; };
@@ -50,10 +68,16 @@ export default function Navbar() {
 
   return (
     <>
-      <header className={`fixed inset-x-0 top-0 z-50 transition-all duration-500 ${scrolled ? 'py-3' : 'py-5'}`}>
-        <div className="mx-auto max-w-6xl px-4 sm:px-6">
+      {/* ── Fixed header ── */}
+      <header
+        ref={headerRef}
+        className={`fixed inset-x-0 top-0 z-50 transition-all duration-500 ${
+          scrolled ? 'py-2 sm:py-3' : 'py-3 sm:py-5'
+        }`}
+      >
+        <div className="mx-auto max-w-6xl px-3 sm:px-6">
           <div
-            className={`flex items-center justify-between rounded-2xl px-4 py-2.5 transition-all duration-500 sm:px-5 ${
+            className={`flex items-center justify-between rounded-2xl px-3 py-2 transition-all duration-500 sm:px-5 sm:py-2.5 ${
               onHero
                 ? 'glass-dark'
                 : scrolled
@@ -61,15 +85,17 @@ export default function Navbar() {
                   : 'border border-stone-200/50 bg-white/80 backdrop-blur-xl'
             }`}
           >
-            <Link to="/" className="flex items-center gap-2.5">
+            {/* Logo */}
+            <Link to="/" className="flex shrink-0 items-center gap-2 sm:gap-2.5">
               <img
                 src={logoLasmoras}
-                alt="LAS MORAS — L'Art de Vivre Naturellement"
-                className="h-9 w-auto rounded-lg object-contain sm:h-10"
+                alt="LAS MORAS"
+                className="h-8 w-auto rounded-lg object-contain sm:h-10"
               />
               <BrandName variant={onHero ? 'light' : 'dark'} size="sm" className="hidden sm:block" />
             </Link>
 
+            {/* Desktop nav */}
             <nav className="hidden items-center gap-1 lg:flex">
               {navLinks.map((link) => (
                 <Link
@@ -82,6 +108,7 @@ export default function Navbar() {
               ))}
             </nav>
 
+            {/* Desktop CTA */}
             <div className="hidden items-center gap-2 md:flex">
               <a
                 href="https://wa.me/237689888291"
@@ -98,6 +125,7 @@ export default function Navbar() {
               </Link>
             </div>
 
+            {/* Mobile burger */}
             <button
               type="button"
               onClick={() => setIsOpen((v) => !v)}
@@ -112,17 +140,26 @@ export default function Navbar() {
         </div>
       </header>
 
-      <div className={isHome ? 'h-0' : 'h-[72px]'} />
+      {/* ── Spacer dynamique — uniquement sur les pages non-hero ── */}
+      {!isHome && (
+        <div style={{ height: headerHeight }} aria-hidden="true" />
+      )}
 
+      {/* ── Menu mobile ── */}
       {isOpen && (
         <div className="fixed inset-0 z-[60] lg:hidden">
+          {/* Overlay backdrop */}
           <button
             type="button"
             className="absolute inset-0 bg-black/20 backdrop-blur-sm"
             onClick={() => setIsOpen(false)}
-            aria-label="Fermer"
+            aria-label="Fermer le menu"
           />
-          <div className="absolute right-4 top-[76px] w-[calc(100%-2rem)] max-w-sm rounded-2xl glass-card p-2 shadow-2xl">
+          {/* Panel — positionné juste sous le header réel */}
+          <div
+            className="absolute left-3 right-3 rounded-2xl glass-card p-2 shadow-2xl sm:left-auto sm:right-4 sm:w-80"
+            style={{ top: headerHeight + 8 }}
+          >
             <nav className="flex flex-col">
               {navLinks.map((link) => (
                 <Link
@@ -138,8 +175,11 @@ export default function Navbar() {
                 </Link>
               ))}
             </nav>
-            <div className="space-y-1 border-t border-stone-200/60 p-2">
-              <a href="tel:+237689888291" className="block rounded-xl px-4 py-3 text-sm text-brand-muted">
+            <div className="space-y-1 border-t border-stone-200/60 p-2 pt-3">
+              <a
+                href="tel:+237689888291"
+                className="block rounded-xl px-4 py-3 text-sm text-brand-muted hover:bg-stone-50"
+              >
                 +237 6 89 88 82 91
               </a>
               <Link to="/catalogue" className="btn-accent block w-full py-3 text-center text-sm">

@@ -62,18 +62,18 @@ export default function PropertyDetails() {
     const nights = countNights(bookingForm.dateArrivee, bookingForm.dateDepart);
 
     addReservation.mutate({
-      logementId: property.id,
-      clientNom: `${bookingForm.prenom.trim()} ${bookingForm.nom.trim()}`.trim(),
-      clientEmail: bookingForm.email.trim(),
-      clientTelephone: bookingForm.telephone.trim(),
-      dateArrivee: bookingForm.dateArrivee,
-      dateDepart: bookingForm.dateDepart,
-      nombreNuits: nights,
-      montantTotal: property.prix * nights,
-      montantPaye: 0,
-      methodePaiement: 'mobile_money',
-      statutPaiement: 'non_paye',
-      statutReservation: 'demande',
+      logement_id: property.id,
+      client_nom: `${bookingForm.prenom.trim()} ${bookingForm.nom.trim()}`.trim(),
+      client_email: bookingForm.email.trim(),
+      client_telephone: bookingForm.telephone.trim(),
+      date_arrivee: bookingForm.dateArrivee,
+      date_depart: bookingForm.dateDepart,
+      nombre_nuits: nights,
+      montant_total: property.prix * nights,
+      montant_paye: 0,
+      methode_paiement: 'mobile_money',
+      statut_paiement: 'non_paye',
+      statut_reservation: 'demande',
       notes: 'Demande envoyée depuis le site public.',
     });
     setBookingForm(initialBookingForm);

@@ -2,6 +2,8 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../lib/supabaseClient';
 import type { Reservation } from '../types';
 
+type ReservationDraft = Omit<Reservation, 'id' | 'created_at'>;
+
 export function useReservations() {
   const queryClient = useQueryClient();
 
@@ -14,32 +16,15 @@ export function useReservations() {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      return data as any[]; // To handle the join
+      return (data ?? []) as Reservation[];
     },
   });
 
   const addReservation = useMutation({
-    mutationFn: async (nouvelleReservation: Omit<Reservation, 'id' | 'dateCreation'>) => {
-      // Mapping from Reservation format to DB format
-      const dbFormat = {
-        logement_id: nouvelleReservation.logementId,
-        client_nom: nouvelleReservation.clientNom,
-        client_email: nouvelleReservation.clientEmail,
-        client_telephone: nouvelleReservation.clientTelephone,
-        date_arrivee: nouvelleReservation.dateArrivee,
-        date_depart: nouvelleReservation.dateDepart,
-        nombre_nuits: nouvelleReservation.nombreNuits,
-        montant_total: nouvelleReservation.montantTotal,
-        montant_paye: nouvelleReservation.montantPaye,
-        methode_paiement: nouvelleReservation.methodePaiement,
-        statut_paiement: nouvelleReservation.statutPaiement,
-        statut_reservation: nouvelleReservation.statutReservation,
-        notes: nouvelleReservation.notes,
-      };
-
+    mutationFn: async (nouvelleReservation: ReservationDraft) => {
       const { data, error } = await supabase
         .from('reservations')
-        .insert(dbFormat)
+        .insert(nouvelleReservation)
         .select()
         .single();
       if (error) throw error;

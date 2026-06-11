@@ -1,15 +1,10 @@
 import { useMemo, useState } from 'react';
 import type { FormEvent } from 'react';
 import { Edit, Plus, Search, Trash2, X } from 'lucide-react';
-import {
-  countNights,
-  type PaymentMethod,
-  type PaymentStatus,
-  rangesOverlap,
-  type Reservation,
-  type ReservationStatus,
-  useLocalStorageStore,
-} from '../../hooks/useLocalStorageStore';
+import type { PaymentMethod, PaymentStatus, Reservation, ReservationStatus } from '../../types';
+import { countNights, rangesOverlap } from '../../utils/helpers';
+import { useLogements } from '../../hooks/useLogements';
+import { useReservations } from '../../hooks/useReservations';
 
 const emptyForm = {
   logementId: '',
@@ -59,8 +54,8 @@ function isBlockingReservation(status: ReservationStatus) {
 }
 
 export default function ManageReservations() {
-  const { logements, reservations, addReservation, updateReservation, deleteReservation } =
-    useLocalStorageStore();
+  const { logements } = useLogements();
+  const { reservations, addReservation, updateReservation, deleteReservation } = useReservations();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingReservation, setEditingReservation] = useState<Reservation | null>(null);
   const [form, setForm] = useState(emptyForm);
@@ -77,13 +72,13 @@ export default function ManageReservations() {
     return reservations.find(
       (reservation) =>
         reservation.id !== editingReservation?.id &&
-        reservation.logementId === form.logementId &&
-        isBlockingReservation(reservation.statutReservation) &&
+        reservation.logement_id === form.logementId &&
+        isBlockingReservation(reservation.statut_reservation) &&
         rangesOverlap(
           form.dateArrivee,
           form.dateDepart,
-          reservation.dateArrivee,
-          reservation.dateDepart,
+          reservation.date_arrivee,
+          reservation.date_depart,
         ),
     );
   }, [editingReservation?.id, form.dateArrivee, form.dateDepart, form.logementId, reservations]);
@@ -93,19 +88,19 @@ export default function ManageReservations() {
 
     return reservations
       .filter((reservation) => {
-        const logement = logements.find((item) => item.id === reservation.logementId);
+        const logement = logements.find((item) => item.id === reservation.logement_id);
         const matchesSearch =
           !normalizedQuery ||
-          reservation.clientNom.toLowerCase().includes(normalizedQuery) ||
-          reservation.clientEmail.toLowerCase().includes(normalizedQuery) ||
-          reservation.clientTelephone.toLowerCase().includes(normalizedQuery) ||
+          reservation.client_nom.toLowerCase().includes(normalizedQuery) ||
+          reservation.client_email.toLowerCase().includes(normalizedQuery) ||
+          reservation.client_telephone.toLowerCase().includes(normalizedQuery) ||
           logement?.nom.toLowerCase().includes(normalizedQuery);
         const matchesStatus =
-          statusFilter === 'tous' || reservation.statutReservation === statusFilter;
+          statusFilter === 'tous' || reservation.statut_reservation === statusFilter;
 
         return matchesSearch && matchesStatus;
       })
-      .sort((a, b) => new Date(b.dateCreation).getTime() - new Date(a.dateCreation).getTime());
+      .sort((a, b) => new Date(b.created_at ?? '').getTime() - new Date(a.created_at ?? '').getTime());
   }, [logements, query, reservations, statusFilter]);
 
   const openCreateModal = () => {
@@ -117,16 +112,16 @@ export default function ManageReservations() {
   const openEditModal = (reservation: Reservation) => {
     setEditingReservation(reservation);
     setForm({
-      logementId: reservation.logementId,
-      clientNom: reservation.clientNom,
-      clientEmail: reservation.clientEmail,
-      clientTelephone: reservation.clientTelephone,
-      dateArrivee: reservation.dateArrivee,
-      dateDepart: reservation.dateDepart,
-      methodePaiement: reservation.methodePaiement,
-      statutPaiement: reservation.statutPaiement,
-      statutReservation: reservation.statutReservation,
-      montantPaye: String(reservation.montantPaye),
+      logementId: reservation.logement_id,
+      clientNom: reservation.client_nom,
+      clientEmail: reservation.client_email,
+      clientTelephone: reservation.client_telephone,
+      dateArrivee: reservation.date_arrivee,
+      dateDepart: reservation.date_depart,
+      methodePaiement: reservation.methode_paiement,
+      statutPaiement: reservation.statut_paiement,
+      statutReservation: reservation.statut_reservation,
+      montantPaye: String(reservation.montant_paye),
       notes: reservation.notes ?? '',
     });
     setIsModalOpen(true);
@@ -143,23 +138,23 @@ export default function ManageReservations() {
     if (!selectedLogement) return;
 
     const draft = {
-      logementId: selectedLogement.id,
-      clientNom: form.clientNom.trim(),
-      clientEmail: form.clientEmail.trim(),
-      clientTelephone: form.clientTelephone.trim(),
-      dateArrivee: form.dateArrivee,
-      dateDepart: form.dateDepart,
-      nombreNuits: nights,
-      montantTotal: total,
-      montantPaye: Number(form.montantPaye),
-      methodePaiement: form.methodePaiement,
-      statutPaiement: form.statutPaiement,
-      statutReservation: form.statutReservation,
+      logement_id: selectedLogement.id,
+      client_nom: form.clientNom.trim(),
+      client_email: form.clientEmail.trim(),
+      client_telephone: form.clientTelephone.trim(),
+      date_arrivee: form.dateArrivee,
+      date_depart: form.dateDepart,
+      nombre_nuits: nights,
+      montant_total: total,
+      montant_paye: Number(form.montantPaye),
+      methode_paiement: form.methodePaiement,
+      statut_paiement: form.statutPaiement,
+      statut_reservation: form.statutReservation,
       notes: form.notes.trim(),
     };
 
-    if (editingReservation) updateReservation(editingReservation.id, draft);
-    else addReservation(draft);
+    if (editingReservation) updateReservation.mutate({ id: editingReservation.id, updates: draft });
+    else addReservation.mutate(draft as any);
 
     closeModal();
   };
@@ -222,36 +217,36 @@ export default function ManageReservations() {
             </thead>
             <tbody className="divide-y divide-gray-100">
               {rows.map((reservation) => {
-                const logement = logements.find((item) => item.id === reservation.logementId);
+                const logement = logements.find((item) => item.id === reservation.logement_id);
                 return (
                   <tr key={reservation.id} className="align-top transition hover:bg-gray-50/80">
                     <td className="px-6 py-5">
-                      <p className="font-bold text-brand-dark">{reservation.clientNom}</p>
-                      <p className="mt-1 text-sm text-gray-500">{reservation.clientTelephone}</p>
-                      <p className="text-sm text-gray-500">{reservation.clientEmail}</p>
+                      <p className="font-bold text-brand-dark">{reservation.client_nom}</p>
+                      <p className="mt-1 text-sm text-gray-500">{reservation.client_telephone}</p>
+                      <p className="text-sm text-gray-500">{reservation.client_email}</p>
                     </td>
                     <td className="px-6 py-5">
-                      <p className="font-bold text-gray-800">{logement?.nom ?? 'Logement supprimé'}</p>
+                      <p className="font-bold text-gray-800">{logement?.nom ?? reservation.logements?.nom ?? 'Logement supprimé'}</p>
                       <p className="mt-1 text-sm text-gray-500">{logement?.type}</p>
                     </td>
                     <td className="px-6 py-5 text-sm font-medium text-gray-600">
-                      <p>{new Date(reservation.dateArrivee).toLocaleDateString('fr-FR')} - {new Date(reservation.dateDepart).toLocaleDateString('fr-FR')}</p>
-                      <p className="mt-1">{reservation.nombreNuits} nuit(s)</p>
+                      <p>{new Date(reservation.date_arrivee).toLocaleDateString('fr-FR')} - {new Date(reservation.date_depart).toLocaleDateString('fr-FR')}</p>
+                      <p className="mt-1">{reservation.nombre_nuits} nuit(s)</p>
                     </td>
                     <td className="px-6 py-5">
                       <p className="font-black text-brand-red">
-                        {reservation.montantTotal.toLocaleString('fr-FR')} FCFA
+                        {Number(reservation.montant_total).toLocaleString('fr-FR')} FCFA
                       </p>
                       <p className="mt-1 text-sm text-gray-600">
-                        {paymentLabels[reservation.methodePaiement]} - {paymentStatusLabels[reservation.statutPaiement]}
+                        {paymentLabels[reservation.methode_paiement]} - {paymentStatusLabels[reservation.statut_paiement]}
                       </p>
                       <p className="text-sm text-gray-500">
-                        Payé: {reservation.montantPaye.toLocaleString('fr-FR')} FCFA
+                        Payé: {Number(reservation.montant_paye).toLocaleString('fr-FR')} FCFA
                       </p>
                     </td>
                     <td className="px-6 py-5">
-                      <span className={`rounded-lg px-3 py-1.5 text-xs font-bold ring-1 ${statusClass(reservation.statutReservation)}`}>
-                        {reservationLabels[reservation.statutReservation]}
+                      <span className={`rounded-lg px-3 py-1.5 text-xs font-bold ring-1 ${statusClass(reservation.statut_reservation)}`}>
+                        {reservationLabels[reservation.statut_reservation]}
                       </span>
                     </td>
                     <td className="px-6 py-5">
@@ -266,7 +261,7 @@ export default function ManageReservations() {
                         </button>
                         <button
                           type="button"
-                          onClick={() => deleteReservation(reservation.id)}
+                          onClick={() => deleteReservation.mutate(reservation.id)}
                           className="rounded-lg border border-gray-200 bg-white p-2.5 text-gray-500 shadow-sm transition hover:border-red-200 hover:bg-red-50 hover:text-brand-red"
                           aria-label="Supprimer la réservation"
                         >

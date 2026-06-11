@@ -12,11 +12,8 @@ import {
   Upload,
   X,
 } from 'lucide-react';
-import {
-  type Logement,
-  type LogementStatus,
-  useLocalStorageStore,
-} from '../../hooks/useLocalStorageStore';
+import type { Logement, LogementStatus } from '../../types';
+import { useLogements } from '../../hooks/useLogements';
 
 const emptyForm = {
   nom: '',
@@ -44,7 +41,7 @@ function readFileAsDataUrl(file: File) {
 }
 
 export default function ManageProperties() {
-  const { logements, addLogement, updateLogement, deleteLogement } = useLocalStorageStore();
+  const { logements, addLogement, updateLogement, deleteLogement } = useLogements();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingLogement, setEditingLogement] = useState<Logement | null>(null);
   const [previewLogement, setPreviewLogement] = useState<Logement | null>(null);
@@ -77,7 +74,7 @@ export default function ManageProperties() {
         if (sortBy === 'prix-asc') return a.prix - b.prix;
         if (sortBy === 'prix-desc') return b.prix - a.prix;
         if (sortBy === 'nom') return a.nom.localeCompare(b.nom);
-        return new Date(b.dateCreation).getTime() - new Date(a.dateCreation).getTime();
+        return new Date(b.created_at ?? '').getTime() - new Date(a.created_at ?? '').getTime();
       });
   }, [logements, query, sortBy, statusFilter, typeFilter]);
 
@@ -139,7 +136,7 @@ export default function ManageProperties() {
   };
 
   const duplicateLogement = (logement: Logement) => {
-    addLogement({
+    addLogement.mutate({
       nom: `${logement.nom} - copie`,
       type: logement.type,
       prix: logement.prix,
@@ -152,16 +149,7 @@ export default function ManageProperties() {
   };
 
   const updateStatus = (logement: Logement, statut: LogementStatus) => {
-    updateLogement(logement.id, {
-      nom: logement.nom,
-      type: logement.type,
-      prix: logement.prix,
-      statut,
-      description: logement.description,
-      photos: logement.photos,
-      surface: logement.surface,
-      equipements: logement.equipements,
-    });
+    updateLogement.mutate({ id: logement.id, updates: { statut } });
   };
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
@@ -178,8 +166,8 @@ export default function ManageProperties() {
       equipements: editingLogement?.equipements ?? ['Climatisation', 'Wi-Fi', 'Parking'],
     };
 
-    if (editingLogement) updateLogement(editingLogement.id, draft);
-    else addLogement(draft);
+    if (editingLogement) updateLogement.mutate({ id: editingLogement.id, updates: draft });
+    else addLogement.mutate(draft);
 
     closeModal();
   };
@@ -337,7 +325,7 @@ export default function ManageProperties() {
                       </button>
                       <button
                         type="button"
-                        onClick={() => deleteLogement(logement.id)}
+                        onClick={() => deleteLogement.mutate(logement.id)}
                         className="rounded-lg border border-gray-200 bg-white p-2.5 text-gray-500 shadow-sm transition hover:border-red-200 hover:bg-red-50 hover:text-brand-red"
                         aria-label={`Supprimer ${logement.nom}`}
                       >

@@ -6,12 +6,11 @@ import Footer from './components/layout/Footer';
 import Navbar from './components/layout/Navbar';
 import ScrollToTop from './components/ui/ScrollToTop';
 import { AuthProvider, useAuth } from './hooks/useAuth';
-import { LocalStorageStoreProvider } from './hooks/useLocalStorageStore';
 import Availability from './pages/admin/Availability';
 import Dashboard from './pages/admin/Dashboard';
 import Login from './pages/admin/Login';
 import ManageContacts from './pages/admin/ManageContacts';
-import ManageLogements from './pages/admin/ManageLogements';
+import ManageProperties from './pages/admin/ManageProperties';
 import ManageReservations from './pages/admin/ManageReservations';
 import Reports from './pages/admin/Reports';
 import About from './pages/public/About';
@@ -55,35 +54,33 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <LocalStorageStoreProvider>
-          <BrowserRouter>
-            <ScrollToTop />
-            <Routes>
-              <Route element={<PublicLayout />}>
-                <Route path="/" element={<Home />} />
-                <Route path="/catalogue" element={<LogementsList />} />
-                <Route path="/galerie" element={<Gallery />} />
-                <Route path="/a-propos" element={<About />} />
-                <Route path="/logements/:id" element={<PropertyDetails />} />
-                <Route path="/contact" element={<Contact />} />
-              </Route>
+        <BrowserRouter>
+          <ScrollToTop />
+          <Routes>
+            <Route element={<PublicLayout />}>
+              <Route path="/" element={<Home />} />
+              <Route path="/catalogue" element={<LogementsList />} />
+              <Route path="/galerie" element={<Gallery />} />
+              <Route path="/a-propos" element={<About />} />
+              <Route path="/logements/:id" element={<PropertyDetails />} />
+              <Route path="/contact" element={<Contact />} />
+            </Route>
 
-              <Route path="/admin/login" element={<Login />} />
+            <Route path="/admin/login" element={<Login />} />
 
-              <Route path="/admin" element={<ProtectedAdminRoute />}>
-                <Route index element={<Dashboard />} />
-                <Route path="dashboard" element={<Dashboard />} />
-                <Route path="logements" element={<ManageLogements />} />
-                <Route path="reservations" element={<ManageReservations />} />
-                <Route path="disponibilites" element={<Availability />} />
-                <Route path="rapports" element={<Reports />} />
-                <Route path="contacts" element={<ManageContacts />} />
-              </Route>
+            <Route path="/admin" element={<ProtectedAdminRoute />}>
+              <Route index element={<Dashboard />} />
+              <Route path="dashboard" element={<Dashboard />} />
+              <Route path="logements" element={<ManageProperties />} />
+              <Route path="reservations" element={<ManageReservations />} />
+              <Route path="disponibilites" element={<Availability />} />
+              <Route path="rapports" element={<Reports />} />
+              <Route path="contacts" element={<ManageContacts />} />
+            </Route>
 
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </BrowserRouter>
-        </LocalStorageStoreProvider>
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
       </AuthProvider>
     </QueryClientProvider>
   );

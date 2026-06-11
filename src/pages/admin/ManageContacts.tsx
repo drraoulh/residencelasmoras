@@ -49,7 +49,7 @@ export default function ManageContacts() {
         <div className="flex flex-col gap-3 sm:flex-row">
           <button
             type="button"
-            onClick={markAllMessagesAsRead}
+            onClick={() => markAllMessagesAsRead.mutate()}
             disabled={unreadCount === 0}
             className="inline-flex items-center justify-center gap-2 rounded-lg border border-gray-200 bg-white px-4 py-3 text-sm font-bold text-gray-700 shadow-sm transition hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50"
           >
@@ -58,7 +58,7 @@ export default function ManageContacts() {
           </button>
           <button
             type="button"
-            onClick={deleteReadMessages}
+            onClick={() => deleteReadMessages.mutate()}
             disabled={readCount === 0}
             className="inline-flex items-center justify-center gap-2 rounded-lg border border-red-100 bg-red-50 px-4 py-3 text-sm font-bold text-brand-red transition hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-50"
           >
@@ -130,7 +130,7 @@ export default function ManageContacts() {
                       {message.message}
                     </td>
                     <td className="px-6 py-5 text-sm font-medium text-gray-500">
-                      {new Date(message.date).toLocaleString('fr-FR', {
+                      {new Date(message.created_at ?? '').toLocaleString('fr-FR', {
                         dateStyle: 'medium',
                         timeStyle: 'short',
                       })}
@@ -158,7 +158,7 @@ export default function ManageContacts() {
                         {!message.lu && (
                           <button
                             type="button"
-                            onClick={() => markMessageAsRead(message.id)}
+                            onClick={() => markMessageAsRead.mutate(message.id)}
                             className="rounded-lg border border-gray-200 bg-white p-2.5 text-gray-500 shadow-sm transition hover:border-green-200 hover:bg-green-50 hover:text-green-700"
                             aria-label="Marquer comme lu"
                           >
@@ -167,7 +167,7 @@ export default function ManageContacts() {
                         )}
                         <button
                           type="button"
-                          onClick={() => deleteMessage(message.id)}
+                          onClick={() => deleteMessage.mutate(message.id)}
                           className="rounded-lg border border-gray-200 bg-white p-2.5 text-gray-500 shadow-sm transition hover:border-red-200 hover:bg-red-50 hover:text-brand-red"
                           aria-label="Supprimer le message"
                         >
