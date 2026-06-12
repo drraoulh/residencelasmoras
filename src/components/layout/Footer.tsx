@@ -2,7 +2,7 @@ import type { ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowUpRight, Clock, Mail, MapPin, Phone } from 'lucide-react';
 import BrandName from '../ui/BrandName';
-import logoLasmoras from '../../assets/logo lasmoras.jpeg';
+import { STATIC_IMAGES } from '../../config/staticAssets';
 
 const navLinks = [
   { to: '/', label: 'Accueil' },
@@ -147,8 +147,12 @@ export default function Footer() {
           <div className="space-y-5 sm:col-span-2 lg:col-span-4">
             <div className="flex items-center gap-3.5">
               <img
-                src={logoLasmoras}
+                src={STATIC_IMAGES.logoUi}
                 alt="LAS MORAS"
+                width={56}
+                height={56}
+                loading="lazy"
+                decoding="async"
                 className="h-14 w-14 shrink-0 rounded-xl object-cover ring-1 ring-white/15"
               />
               <BrandName variant="light" size="md" />

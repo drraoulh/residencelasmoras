@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Menu, MessageCircle, X } from 'lucide-react';
 import BrandName from '../ui/BrandName';
-import logoLasmoras from '../../assets/logo lasmoras.jpeg';
+import { STATIC_IMAGES } from '../../config/staticAssets';
 import { WHATSAPP_LINK } from '../../utils/whatsapp';
 
 const navLinks = [
@@ -97,9 +97,12 @@ export default function Navbar() {
             {/* Logo */}
             <Link to="/" className="flex shrink-0 items-center gap-2 sm:gap-2.5">
               <img
-                src={logoLasmoras}
+                src={STATIC_IMAGES.logoUi}
                 alt="LAS MORAS"
-                className="h-8 w-auto rounded-lg object-contain sm:h-10"
+                width={40}
+                height={40}
+                decoding="async"
+                className="h-8 w-8 rounded-lg object-cover sm:h-10 sm:w-10"
               />
               <BrandName
                 variant={onHero && !isOpen ? 'light' : 'dark'}

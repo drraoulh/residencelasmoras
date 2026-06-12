@@ -16,7 +16,7 @@ import {
 import BrandName from '../ui/BrandName';
 import { useAuth } from '../../hooks/useAuth';
 import { useAutoCompleteReservations } from '../../hooks/useAutoCompleteReservations';
-import logoLasmoras from '../../assets/logo lasmoras.jpeg';
+import { STATIC_IMAGES } from '../../config/staticAssets';
 
 const navItems = [
   { name: 'Tableau de bord', path: '/admin/dashboard', icon: LayoutDashboard },
@@ -76,7 +76,7 @@ export default function AdminLayout() {
         <div className="border-b border-stone-100 px-6 py-6">
           <div className="flex items-center gap-3">
             <img
-              src={logoLasmoras}
+              src={STATIC_IMAGES.logoUi}
               alt="LAS MORAS"
               className="h-12 w-auto rounded-lg object-contain ring-1 ring-stone-200/80"
             />
@@ -110,7 +110,7 @@ export default function AdminLayout() {
         {/* Header mobile */}
         <header className="sticky top-0 z-40 flex items-center justify-between border-b border-stone-200/70 bg-white/95 px-4 py-3 backdrop-blur lg:hidden">
           <div className="flex min-w-0 items-center gap-2">
-            <img src={logoLasmoras} alt="LAS MORAS" className="h-9 w-auto rounded-lg" />
+            <img src={STATIC_IMAGES.logoUi} alt="LAS MORAS" width={36} height={36} className="h-9 w-9 rounded-lg object-cover" />
             <BrandName size="sm" className="hidden min-[400px]:block" />
           </div>
           <button

@@ -10,20 +10,18 @@ import { useLogementsList } from '../../hooks/useLogementsList';
 import { usePageMeta } from '../../hooks/usePageMeta';
 import { PAGE_SEO } from '../../config/seo';
 import { buildLodgingBusinessJsonLd } from '../../components/seo/SeoJsonLd';
+import { STATIC_IMAGES } from '../../config/staticAssets';
 import { pickFeaturedLogementsByType } from '../../utils/logements';
 import { WHATSAPP_LINK } from '../../utils/whatsapp';
-import galleryPreview1 from '../../assets/residencelasmoras1.jpeg';
-import galleryPreview2 from '../../assets/residencelasmoras2.jpeg';
 import vueResidence from '../../assets/Vue residence.jpeg';
 
 const HeroSearchBar = lazy(() => import('../../components/search/HeroSearchBar'));
 
-const HERO_IMAGE = '/images/hero-lcp.jpeg';
-
-const welcomeGalleryPreview = [
-  { id: 'preview-1', src: galleryPreview1, label: 'Salon lumineux', category: 'Intérieurs' },
-  { id: 'preview-2', src: galleryPreview2, label: 'Espace de vie', category: 'Intérieurs' },
-];
+const HERO_IMAGE = STATIC_IMAGES.hero;
+const welcomeGalleryPreview = STATIC_IMAGES.galleryPreview.map((item, index) => ({
+  id: `preview-${index + 1}`,
+  ...item,
+}));
 
 const services = [
   { icon: Wifi, title: 'Wi-Fi fibre', description: 'Connexion stable pour travailler et streamer.' },

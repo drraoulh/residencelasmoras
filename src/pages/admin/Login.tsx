@@ -4,7 +4,7 @@ import { ArrowLeft, Lock } from 'lucide-react';
 import BrandName from '../../components/ui/BrandName';
 import { useAuth } from '../../hooks/useAuth';
 import { supabase } from '../../lib/supabaseClient';
-import logoLasmoras from '../../assets/logo lasmoras.jpeg';
+import { STATIC_IMAGES } from '../../config/staticAssets';
 
 export default function Login() {
   const { isAuthenticated } = useAuth();
@@ -80,9 +80,11 @@ export default function Login() {
       <div className="flex flex-1 flex-col items-center justify-center px-4 pb-16">
         <div className="mb-8 flex flex-col items-center text-center">
           <img
-            src={logoLasmoras}
+            src={STATIC_IMAGES.logoUi}
             alt="LAS MORAS"
-            className="h-20 w-auto rounded-xl object-contain ring-1 ring-stone-200/80 sm:h-24"
+            width={96}
+            height={96}
+            className="h-20 w-20 rounded-xl object-cover ring-1 ring-stone-200/80 sm:h-24 sm:w-24"
           />
           <div className="mt-4">
             <BrandName size="md" />
