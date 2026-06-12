@@ -2,6 +2,8 @@ import { formatDateFr } from './availability';
 
 export const WHATSAPP_PHONE = '237689888291';
 
+export const WHATSAPP_LINK = `https://wa.me/${WHATSAPP_PHONE}`;
+
 export function buildWhatsAppUrl(message: string) {
   return `https://wa.me/${WHATSAPP_PHONE}?text=${encodeURIComponent(message)}`;
 }

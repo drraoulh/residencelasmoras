@@ -75,6 +75,7 @@ function App() {
               <Route path="/a-propos" element={<About />} />
               <Route path="/logements/:id" element={<PropertyDetails />} />
               <Route path="/contact" element={<Contact />} />
+              <Route path="*" element={<NotFound />} />
             </Route>
 
             <Route path="/confirmer/:id" element={<ConfirmReservation />} />
@@ -92,8 +93,6 @@ function App() {
               <Route path="galerie" element={<ManageGallery />} />
               <Route path="contacts" element={<ManageContacts />} />
             </Route>
-
-            <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
         </AppProviders>

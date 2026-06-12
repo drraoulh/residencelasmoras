@@ -3,6 +3,7 @@ import type { Logement } from '../../types';
 import type { AvailabilityResult } from '../../utils/availability';
 import { formatDateFr } from '../../utils/availability';
 import LogementActions from '../ui/LogementActions';
+import { getLogementPhoto } from '../../utils/logementPhoto';
 
 interface LogementCardProps {
   logement: Logement;
@@ -33,7 +34,7 @@ export default function LogementCard({
     <article className="group overflow-hidden rounded-2xl border border-stone-200/60 bg-white transition hover:shadow-[0_8px_30px_rgba(0,0,0,0.06)]">
       <Link to={detailUrl} className="relative block h-52 overflow-hidden sm:h-56">
         <img
-          src={logement.photos[0]}
+          src={getLogementPhoto(logement.photos)}
           alt={logement.nom}
           className={`h-full w-full object-cover transition duration-700 group-hover:scale-105 ${
             hasDateSearch

@@ -12,10 +12,13 @@ import {
   Phone,
   Send,
 } from 'lucide-react';
-import BrandName from '../../components/ui/BrandName';
+import PageHeroHeading from '../../components/ui/PageHeroHeading';
 import FaqSection from '../../components/ui/FaqSection';
 import { faqItems } from '../../data/faq';
 import { useMessages } from '../../hooks/useMessages';
+import { usePageMeta } from '../../hooks/usePageMeta';
+import { PAGE_SEO } from '../../config/seo';
+import { WHATSAPP_LINK } from '../../utils/whatsapp';
 import vueResidence from '../../assets/Vue residence.jpeg';
 
 const initialForm = { nom: '', email: '', sujet: '', message: '' };
@@ -24,7 +27,6 @@ const MAP_EMBED =
   'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d6237.579855042787!2d11.46227783168611!3d3.8416910906414037!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x108bcf3b9065b93b%3A0x625deca93be02be1!2sResidence%20las%20Moras!5e1!3m2!1sen!2sfr!4v1781078204189!5m2!1sen!2sfr';
 
 const MAP_LINK = 'https://share.google/GUJ0aaC0urzsl247t';
-const WHATSAPP_LINK = 'https://wa.me/237689888291';
 
 const contactMethods = [
   {
@@ -72,6 +74,7 @@ const subjectPresets = ['Réservation', 'Disponibilité', 'Tarifs', 'Autre'];
 const contactFaq = faqItems.filter((_, index) => [2, 3, 5].includes(index));
 
 export default function Contact() {
+  usePageMeta(PAGE_SEO.contact);
   const { addMessage } = useMessages();
   const [form, setForm] = useState(initialForm);
   const [isSent, setIsSent] = useState(false);
@@ -106,14 +109,18 @@ export default function Contact() {
         <div className="absolute inset-0 bg-stone-900/55" />
         <div className="relative z-10 mx-auto max-w-6xl px-4 pt-28 pb-16 text-center sm:px-6">
           <div className="glass-on-image mx-auto inline-block max-w-xl">
-            <p className="section-label !text-white/60">Contact</p>
-            <div className="mt-3 flex justify-center">
-              <BrandName variant="light" size="lg" />
-            </div>
-            <p className="mx-auto mt-4 max-w-md text-sm leading-relaxed text-white/75">
-              Réservation, disponibilité ou renseignement — notre équipe vous répond rapidement,
-              7 jours sur 7.
-            </p>
+            <PageHeroHeading
+              label="Contact"
+              title={
+                <>
+                  Parlons de
+                  <span className="block text-brand-red">votre séjour</span>
+                </>
+              }
+              subtitle="Réservation, disponibilité ou renseignement — notre équipe vous répond rapidement, 7 jours sur 7."
+              variant="light"
+              align="center"
+            />
             <div className="mt-6 flex flex-col items-center justify-center gap-2.5 min-[400px]:flex-row">
               <a href={WHATSAPP_LINK} target="_blank" rel="noreferrer" className="btn-accent w-full min-[400px]:w-auto">
                 <MessageCircle className="h-4 w-4" />
@@ -385,7 +392,7 @@ export default function Contact() {
       </section>
 
       {/* CTA */}
-      <section className="px-4 pb-20 sm:px-6">
+      <section className="px-4 pb-12 sm:px-6 sm:pb-14">
         <div className="mx-auto max-w-6xl">
           <div className="glass-card flex flex-col items-center justify-between gap-6 p-6 text-center sm:flex-row sm:p-8 sm:text-left">
             <div>

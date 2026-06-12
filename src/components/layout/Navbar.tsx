@@ -1,14 +1,15 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Menu, X } from 'lucide-react';
+import { Menu, MessageCircle, X } from 'lucide-react';
 import BrandName from '../ui/BrandName';
 import logoLasmoras from '../../assets/logo lasmoras.jpeg';
+import { WHATSAPP_LINK } from '../../utils/whatsapp';
 
 const navLinks = [
   { to: '/', label: 'Accueil' },
-  { to: '/catalogue', label: 'Logements' },
+  { to: '/catalogue', label: 'Nos logements' },
   { to: '/galerie', label: 'Galerie' },
-  { to: '/a-propos', label: 'À propos de nous' },
+  { to: '/a-propos', label: 'À propos' },
   { to: '/contact', label: 'Contact' },
 ];
 
@@ -57,14 +58,28 @@ export default function Navbar() {
 
   const linkClass = (active: boolean) => {
     if (active) {
-      return onHero
+      return onHero && !isOpen
         ? 'bg-white/15 font-medium text-white'
         : 'bg-red-50 font-medium text-brand-red';
     }
-    return onHero
+    return onHero && !isOpen
       ? 'text-white/70 hover:bg-white/10 hover:text-white'
       : 'text-brand-muted hover:text-brand-dark';
   };
+
+  const headerSurfaceClass =
+    isOpen
+      ? 'border border-stone-200/80 bg-white shadow-[0_4px_24px_rgba(0,0,0,0.12)]'
+      : onHero
+        ? 'glass-dark'
+        : scrolled
+          ? 'glass shadow-[0_4px_24px_rgba(0,0,0,0.06)]'
+          : 'border border-stone-200/50 bg-white/80 backdrop-blur-xl';
+
+  const burgerButtonClass =
+    isOpen || !onHero
+      ? 'text-brand-dark hover:bg-stone-100'
+      : 'text-white hover:bg-white/10';
 
   return (
     <>
@@ -77,13 +92,7 @@ export default function Navbar() {
       >
         <div className="mx-auto max-w-6xl px-3 sm:px-6">
           <div
-            className={`flex items-center justify-between rounded-2xl px-3 py-2 transition-all duration-500 sm:px-5 sm:py-2.5 ${
-              onHero
-                ? 'glass-dark'
-                : scrolled
-                  ? 'glass shadow-[0_4px_24px_rgba(0,0,0,0.06)]'
-                  : 'border border-stone-200/50 bg-white/80 backdrop-blur-xl'
-            }`}
+            className={`flex items-center justify-between rounded-2xl px-3 py-2 transition-all duration-500 sm:px-5 sm:py-2.5 ${headerSurfaceClass}`}
           >
             {/* Logo */}
             <Link to="/" className="flex shrink-0 items-center gap-2 sm:gap-2.5">
@@ -92,7 +101,11 @@ export default function Navbar() {
                 alt="LAS MORAS"
                 className="h-8 w-auto rounded-lg object-contain sm:h-10"
               />
-              <BrandName variant={onHero ? 'light' : 'dark'} size="sm" className="hidden sm:block" />
+              <BrandName
+                variant={onHero && !isOpen ? 'light' : 'dark'}
+                size="sm"
+                className="hidden sm:block"
+              />
             </Link>
 
             {/* Desktop nav */}
@@ -111,7 +124,7 @@ export default function Navbar() {
             {/* Desktop CTA */}
             <div className="hidden items-center gap-2 md:flex">
               <a
-                href="https://wa.me/237689888291"
+                href={WHATSAPP_LINK}
                 target="_blank"
                 rel="noreferrer"
                 className={`rounded-full px-4 py-2 text-sm transition ${
@@ -121,7 +134,7 @@ export default function Navbar() {
                 WhatsApp
               </a>
               <Link to="/catalogue" className="btn-accent !px-5 !py-2 text-xs">
-                Réserver
+                Voir les logements
               </Link>
             </div>
 
@@ -129,10 +142,9 @@ export default function Navbar() {
             <button
               type="button"
               onClick={() => setIsOpen((v) => !v)}
-              className={`flex h-9 w-9 items-center justify-center rounded-full transition lg:hidden ${
-                onHero ? 'text-white hover:bg-white/10' : 'text-brand-dark hover:bg-stone-100'
-              }`}
+              className={`flex h-9 w-9 items-center justify-center rounded-full transition lg:hidden ${burgerButtonClass}`}
               aria-label={isOpen ? 'Fermer' : 'Menu'}
+              aria-expanded={isOpen}
             >
               {isOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
             </button>
@@ -151,13 +163,13 @@ export default function Navbar() {
           {/* Overlay backdrop */}
           <button
             type="button"
-            className="absolute inset-0 bg-black/20 backdrop-blur-sm"
+            className="absolute inset-0 bg-stone-950/50 backdrop-blur-sm"
             onClick={() => setIsOpen(false)}
             aria-label="Fermer le menu"
           />
           {/* Panel — positionné juste sous le header réel */}
           <div
-            className="absolute left-3 right-3 max-h-[calc(100dvh-5rem)] overflow-y-auto rounded-2xl glass-card p-2 shadow-2xl sm:left-auto sm:right-4 sm:max-h-none sm:w-80"
+            className="absolute left-3 right-3 max-h-[calc(100dvh-5rem)] overflow-y-auto rounded-2xl border border-stone-200/80 bg-white p-2 shadow-[0_16px_48px_rgba(0,0,0,0.18)] sm:left-auto sm:right-4 sm:max-h-none sm:w-80"
             style={{ top: headerHeight + 8 }}
           >
             <nav className="flex flex-col">
@@ -165,25 +177,34 @@ export default function Navbar() {
                 <Link
                   key={link.to}
                   to={link.to}
-                  className={`rounded-xl px-4 py-3 text-sm transition ${
+                  className={`rounded-xl px-4 py-3 text-sm font-medium transition ${
                     isActive(link.to)
-                      ? 'bg-red-50 font-medium text-brand-red'
-                      : 'text-brand-muted hover:bg-stone-50'
+                      ? 'bg-red-50 text-brand-red'
+                      : 'text-brand-dark hover:bg-stone-100'
                   }`}
                 >
                   {link.label}
                 </Link>
               ))}
             </nav>
-            <div className="space-y-1 border-t border-stone-200/60 p-2 pt-3">
+            <div className="space-y-1 border-t border-stone-200/80 p-2 pt-3">
               <a
                 href="tel:+237689888291"
-                className="block rounded-xl px-4 py-3 text-sm text-brand-muted hover:bg-stone-50"
+                className="block rounded-xl px-4 py-3 text-sm font-medium text-brand-dark hover:bg-stone-100"
               >
                 +237 6 89 88 82 91
               </a>
+              <a
+                href={WHATSAPP_LINK}
+                target="_blank"
+                rel="noreferrer"
+                className="flex items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-medium text-brand-dark hover:bg-stone-100"
+              >
+                <MessageCircle className="h-4 w-4 text-brand-red" />
+                WhatsApp
+              </a>
               <Link to="/catalogue" className="btn-accent block w-full py-3 text-center text-sm">
-                Réserver
+                Voir les logements
               </Link>
             </div>
           </div>

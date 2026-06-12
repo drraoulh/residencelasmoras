@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import type { ChangeEvent, FormEvent } from 'react';
 import {
   Eye,
@@ -15,6 +15,7 @@ import AdminPageHeader from '../../components/admin/AdminPageHeader';
 import { galleryCategories } from '../../data/galleryImages';
 import { useGallery } from '../../hooks/useGallery';
 import type { GalleryCategory, GalleryImage } from '../../types';
+import { galleryImageNeedsRepair, resolveGalleryImageUrl } from '../../utils/galleryImageUrl';
 import { uploadGalleryImage } from '../../utils/galleryStorage';
 
 const emptyForm = {
@@ -29,11 +30,16 @@ const emptyForm = {
 export default function ManageGallery() {
   const {
     galleryImages,
-    fromDatabase,
+    loadState,
+    canManage,
     isLoading,
+    error,
     addGalleryImage,
     updateGalleryImage,
     deleteGalleryImage,
+    importDefaultGallery,
+    repairGalleryImages,
+    formatSupabaseError,
   } = useGallery({ includeHidden: true });
 
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -43,6 +49,35 @@ export default function ManageGallery() {
   const [categoryFilter, setCategoryFilter] = useState<'Tous' | GalleryCategory>('Tous');
   const [uploadError, setUploadError] = useState('');
   const [isUploading, setIsUploading] = useState(false);
+
+  const importStarted = useRef(false);
+  const repairStarted = useRef(false);
+
+  useEffect(() => {
+    if (!canManage || loadState !== 'empty' || isLoading || importStarted.current) return;
+    importStarted.current = true;
+    importDefaultGallery.mutate(undefined, {
+      onError: () => {
+        importStarted.current = false;
+      },
+    });
+  }, [canManage, loadState, isLoading, importDefaultGallery]);
+
+  useEffect(() => {
+    if (!canManage || loadState !== 'ready' || isLoading || repairStarted.current) return;
+    if (!galleryImages.some(galleryImageNeedsRepair)) return;
+
+    repairStarted.current = true;
+    repairGalleryImages.mutate(undefined, {
+      onError: () => {
+        repairStarted.current = false;
+      },
+    });
+  }, [canManage, loadState, isLoading, galleryImages, repairGalleryImages]);
+
+  const canEditImages = canManage && loadState === 'ready';
+  const isImporting = loadState === 'empty' && importDefaultGallery.isPending;
+  const isRepairing = loadState === 'ready' && repairGalleryImages.isPending;
 
   const filteredImages = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
@@ -65,8 +100,6 @@ export default function ManageGallery() {
   };
 
   const openEditModal = (image: GalleryImage) => {
-    if (!fromDatabase || image.id.startsWith('default-')) return;
-
     setEditingImage(image);
     setForm({
       label: image.label,
@@ -112,8 +145,8 @@ export default function ManageGallery() {
         image_url: uploaded.image_url,
         storage_path: uploaded.storage_path,
       }));
-    } catch {
-      setUploadError('Upload impossible. Vérifiez que le bucket « gallery » existe dans Supabase.');
+    } catch (err) {
+      setUploadError(formatSupabaseError(err));
     } finally {
       setIsUploading(false);
       event.target.value = '';
@@ -152,29 +185,31 @@ export default function ManageGallery() {
         });
       }
       closeModal();
-    } catch {
-      setUploadError('Enregistrement impossible. Exécutez supabase-gallery.sql si ce n\'est pas déjà fait.');
+    } catch (err) {
+      setUploadError(formatSupabaseError(err));
     }
   };
 
   const handleDelete = async (image: GalleryImage) => {
-    if (!fromDatabase || image.id.startsWith('default-')) return;
     if (!window.confirm(`Supprimer « ${image.label} » de la galerie ?`)) return;
 
     try {
       await deleteGalleryImage.mutateAsync({ id: image.id, storage_path: image.storage_path });
-    } catch {
-      window.alert('Suppression impossible pour le moment.');
+    } catch (err) {
+      window.alert(formatSupabaseError(err));
     }
   };
 
   const toggleVisible = (image: GalleryImage) => {
-    if (!fromDatabase || image.id.startsWith('default-')) return;
-
-    updateGalleryImage.mutate({
-      id: image.id,
-      updates: { visible: !(image.visible !== false) },
-    });
+    updateGalleryImage.mutate(
+      {
+        id: image.id,
+        updates: { visible: !(image.visible !== false) },
+      },
+      {
+        onError: (err) => window.alert(formatSupabaseError(err)),
+      },
+    );
   };
 
   return (
@@ -183,17 +218,69 @@ export default function ManageGallery() {
         title="Galerie photos"
         description="Ajoutez, masquez ou supprimez les images affichées sur la page Galerie du site."
         actions={
-          <button type="button" onClick={openCreateModal} className="admin-btn-primary">
+          <button
+            type="button"
+            onClick={openCreateModal}
+            disabled={!canManage}
+            className="admin-btn-primary disabled:cursor-not-allowed disabled:opacity-50"
+          >
             <ImagePlus className="h-4 w-4" />
             Ajouter une photo
           </button>
         }
       />
 
-      {!fromDatabase && (
+      {loadState === 'missing_table' && (
         <div className="mb-6 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
-          Exécutez le script <code className="rounded bg-white/80 px-1.5 py-0.5">supabase-gallery.sql</code>{' '}
-          dans Supabase pour activer la galerie dynamique. Les images par défaut sont affichées en attendant.
+          La table <strong>gallery_images</strong> n&apos;existe pas encore. Exécutez{' '}
+          <code className="rounded bg-white/80 px-1.5 py-0.5">supabase-gallery-fix.sql</code> dans
+          Supabase → SQL Editor, puis rafraîchissez cette page.
+        </div>
+      )}
+
+      {loadState === 'empty' && !importDefaultGallery.isError && (
+        <div className="mb-6 rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-900">
+          {isImporting
+            ? 'Importation des 8 photos actuelles du site dans la galerie…'
+            : 'Les photos du site public sont en cours de synchronisation avec l’admin.'}
+        </div>
+      )}
+
+      {importDefaultGallery.isError && (
+        <div className="mb-6 flex flex-col gap-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800 sm:flex-row sm:items-center sm:justify-between">
+          <span>Impossible d’importer les photos : {formatSupabaseError(importDefaultGallery.error)}</span>
+          <button
+            type="button"
+            onClick={() => importDefaultGallery.mutate()}
+            className="admin-btn-secondary shrink-0 border-red-200 bg-white"
+          >
+            Réessayer l’import
+          </button>
+        </div>
+      )}
+
+      {repairGalleryImages.isError && (
+        <div className="mb-6 flex flex-col gap-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800 sm:flex-row sm:items-center sm:justify-between">
+          <span>Réparation des images : {formatSupabaseError(repairGalleryImages.error)}</span>
+          <button
+            type="button"
+            onClick={() => repairGalleryImages.mutate()}
+            className="admin-btn-secondary shrink-0 border-red-200 bg-white"
+          >
+            Réparer les images
+          </button>
+        </div>
+      )}
+
+      {isRepairing && (
+        <div className="mb-6 rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-900">
+          Publication des images sur Supabase Storage pour le site public…
+        </div>
+      )}
+
+      {error && (
+        <div className="mb-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+          Erreur de chargement : {formatSupabaseError(error)}
         </div>
       )}
 
@@ -221,89 +308,87 @@ export default function ManageGallery() {
         </select>
       </div>
 
-      {isLoading ? (
+      {isLoading || isImporting || isRepairing ? (
         <div className="admin-card flex items-center justify-center p-12 text-sm text-brand-muted">
-          Chargement de la galerie…
+          {isImporting
+            ? 'Importation des photos du site…'
+            : isRepairing
+              ? 'Réparation des liens images…'
+              : 'Chargement de la galerie…'}
         </div>
       ) : filteredImages.length === 0 ? (
         <div className="admin-card flex flex-col items-center justify-center gap-3 p-12 text-center">
           <ImagePlus className="h-8 w-8 text-brand-muted" />
           <p className="text-sm text-brand-muted">Aucune photo dans la galerie.</p>
-          <button type="button" onClick={openCreateModal} className="admin-btn-primary">
-            Ajouter la première photo
-          </button>
+          {canManage && (
+            <button type="button" onClick={openCreateModal} className="admin-btn-primary">
+              Ajouter la première photo
+            </button>
+          )}
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
-          {filteredImages.map((image) => {
-            const isDefault = image.id.startsWith('default-');
-            const canManage = fromDatabase && !isDefault;
-
-            return (
-              <article key={image.id} className="admin-card overflow-hidden">
-                <div className="relative aspect-[4/3] bg-brand-gray">
-                  <img src={image.image_url} alt={image.label} className="h-full w-full object-cover" />
-                  {image.visible === false && (
-                    <span className="absolute left-3 top-3 rounded-full bg-black/60 px-2.5 py-1 text-[10px] font-medium uppercase tracking-wider text-white">
-                      Masquée
-                    </span>
-                  )}
-                  {isDefault && (
-                    <span className="absolute right-3 top-3 rounded-full bg-amber-500/90 px-2.5 py-1 text-[10px] font-medium uppercase tracking-wider text-white">
-                      Démo
-                    </span>
-                  )}
+          {filteredImages.map((image) => (
+            <article key={image.id} className="admin-card overflow-hidden">
+              <div className="relative aspect-[4/3] bg-brand-gray">
+                  <img
+                    src={resolveGalleryImageUrl(image)}
+                    alt={image.label}
+                    className="h-full w-full object-cover"
+                  />
+                {image.visible === false && (
+                  <span className="absolute left-3 top-3 rounded-full bg-black/60 px-2.5 py-1 text-[10px] font-medium uppercase tracking-wider text-white">
+                    Masquée
+                  </span>
+                )}
+              </div>
+              <div className="space-y-3 p-4">
+                <div>
+                  <p className="text-[10px] font-medium uppercase tracking-widest text-brand-red">
+                    {image.category}
+                  </p>
+                  <h2 className="mt-1 text-sm font-semibold text-brand-dark">{image.label}</h2>
                 </div>
-                <div className="space-y-3 p-4">
-                  <div>
-                    <p className="text-[10px] font-medium uppercase tracking-widest text-brand-red">
-                      {image.category}
-                    </p>
-                    <h2 className="mt-1 text-sm font-semibold text-brand-dark">{image.label}</h2>
-                  </div>
+                {canEditImages && (
                   <div className="flex flex-wrap gap-2">
-                    {canManage && (
-                      <>
-                        <button
-                          type="button"
-                          onClick={() => openEditModal(image)}
-                          className="admin-btn-secondary px-3 py-2 text-xs"
-                        >
-                          <Pencil className="h-3.5 w-3.5" />
-                          Modifier
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => toggleVisible(image)}
-                          className="admin-btn-secondary px-3 py-2 text-xs"
-                        >
-                          {image.visible === false ? (
-                            <>
-                              <Eye className="h-3.5 w-3.5" />
-                              Afficher
-                            </>
-                          ) : (
-                            <>
-                              <EyeOff className="h-3.5 w-3.5" />
-                              Masquer
-                            </>
-                          )}
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleDelete(image)}
-                          className="admin-btn-secondary border-red-100 bg-red-50 px-3 py-2 text-xs text-brand-red hover:bg-red-100"
-                        >
-                          <Trash2 className="h-3.5 w-3.5" />
-                          Supprimer
-                        </button>
-                      </>
-                    )}
+                    <button
+                      type="button"
+                      onClick={() => openEditModal(image)}
+                      className="admin-btn-secondary px-3 py-2 text-xs"
+                    >
+                      <Pencil className="h-3.5 w-3.5" />
+                      Modifier
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => toggleVisible(image)}
+                      className="admin-btn-secondary px-3 py-2 text-xs"
+                    >
+                      {image.visible === false ? (
+                        <>
+                          <Eye className="h-3.5 w-3.5" />
+                          Afficher
+                        </>
+                      ) : (
+                        <>
+                          <EyeOff className="h-3.5 w-3.5" />
+                          Masquer
+                        </>
+                      )}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleDelete(image)}
+                      className="admin-btn-secondary border-red-100 bg-red-50 px-3 py-2 text-xs text-brand-red hover:bg-red-100"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                      Supprimer
+                    </button>
                   </div>
-                </div>
-              </article>
-            );
-          })}
+                )}
+              </div>
+            </article>
+          ))}
         </div>
       )}
 
@@ -353,7 +438,16 @@ export default function ManageGallery() {
 
                 {form.image_url ? (
                   <div className="relative overflow-hidden rounded-xl">
-                    <img src={form.image_url} alt="Aperçu" className="h-40 w-full object-cover" />
+                    <img
+                      src={resolveGalleryImageUrl({
+                        image_url: form.image_url,
+                        storage_path: form.storage_path,
+                        label: form.label,
+                        sort_order: editingImage?.sort_order,
+                      })}
+                      alt="Aperçu"
+                      className="h-40 w-full object-cover"
+                    />
                     <button
                       type="button"
                       onClick={() => setForm({ ...form, image_url: '', storage_path: null })}

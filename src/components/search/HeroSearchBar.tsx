@@ -12,6 +12,7 @@ import {
   getLogementAvailability,
   type AvailabilityResult,
 } from '../../utils/availability';
+import { getLogementPhoto } from '../../utils/logementPhoto';
 
 interface SearchResult {
   logement: Logement;
@@ -219,7 +220,7 @@ export default function HeroSearchBar() {
                 >
                   <div className="flex min-w-0 items-start gap-3">
                     <img
-                      src={logement.photos[0]}
+                      src={getLogementPhoto(logement.photos)}
                       alt={logement.nom}
                       className="h-16 w-16 shrink-0 rounded-xl object-cover sm:h-14 sm:w-14"
                     />

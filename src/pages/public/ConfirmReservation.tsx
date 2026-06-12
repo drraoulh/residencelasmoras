@@ -1,9 +1,11 @@
 import { useState, type FormEvent } from 'react';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
-import { CheckCircle, Home, Loader2, Lock, XCircle } from 'lucide-react';
+import { ArrowRight, CheckCircle, Home, Loader2, Lock, MessageCircle, XCircle } from 'lucide-react';
 import BrandName from '../../components/ui/BrandName';
+import { useAuth } from '../../hooks/useAuth';
 import { confirmReservationByToken } from '../../utils/confirmReservation';
+import { WHATSAPP_LINK } from '../../utils/whatsapp';
 
 type ConfirmState = 'pin' | 'loading' | 'success' | 'already' | 'invalid' | 'error';
 
@@ -14,6 +16,7 @@ export default function ConfirmReservation() {
   const [searchParams] = useSearchParams();
   const token = searchParams.get('token') ?? '';
   const queryClient = useQueryClient();
+  const { isAuthenticated } = useAuth();
   const [pin, setPin] = useState('');
   const [pinError, setPinError] = useState('');
   const [state, setState] = useState<ConfirmState>(() => {
@@ -120,9 +123,26 @@ export default function ConfirmReservation() {
         )}
 
         {state !== 'loading' && state !== 'pin' && (
-          <Link to="/admin/reservations" className="btn-primary mt-8 w-full">
-            Voir les réservations
-          </Link>
+          <div className="mt-8 flex flex-col gap-3">
+            <Link to="/catalogue" className="btn-accent w-full">
+              Voir les logements
+              <ArrowRight className="h-4 w-4" />
+            </Link>
+            <a
+              href={WHATSAPP_LINK}
+              target="_blank"
+              rel="noreferrer"
+              className="btn-ghost w-full"
+            >
+              <MessageCircle className="h-4 w-4" />
+              Nous contacter sur WhatsApp
+            </a>
+            {isAuthenticated && (
+              <Link to="/admin/reservations" className="btn-primary w-full">
+                Voir les réservations (admin)
+              </Link>
+            )}
+          </div>
         )}
       </div>
 

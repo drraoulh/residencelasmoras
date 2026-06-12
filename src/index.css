@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap');
 @import "tailwindcss";
 
 @theme {
@@ -9,8 +9,8 @@
   --color-brand-gray: #F5F5F4;
   --color-brand-muted: #78716C;
   --color-brand-border: #E7E5E4;
-  --font-sans: 'Plus Jakarta Sans', system-ui, sans-serif;
-  --font-heading: 'Barlow Condensed', system-ui, sans-serif;
+  --font-sans: 'DM Sans', system-ui, sans-serif;
+  --font-heading: 'Cormorant Garamond', Georgia, 'Times New Roman', serif;
 }
 
 @layer base {
@@ -28,7 +28,19 @@
   h4,
   h5,
   h6 {
-    @apply font-heading;
+    @apply font-heading text-balance;
+  }
+
+  h1 {
+    @apply text-3xl font-medium leading-[1.08] tracking-tight sm:text-4xl md:text-5xl;
+  }
+
+  h2 {
+    @apply text-2xl font-medium leading-snug tracking-tight sm:text-3xl;
+  }
+
+  h3 {
+    @apply text-xl font-medium leading-snug tracking-tight sm:text-2xl;
   }
 }
 
@@ -81,11 +93,43 @@
 
   /* ── Layout ── */
   .section-label {
-    @apply text-[10px] font-medium uppercase tracking-[0.2em] text-brand-muted sm:text-[11px] sm:tracking-[0.3em];
+    @apply text-[10px] font-medium uppercase tracking-[0.2em] text-brand-muted sm:text-[11px] sm:tracking-[0.28em];
   }
 
+  /* H1 hero — pages principales */
+  .page-hero-title {
+    @apply font-heading text-[2.5rem] font-medium leading-[1.05] tracking-tight text-brand-dark sm:text-[3.25rem] md:text-6xl lg:text-[4.25rem];
+  }
+
+  .page-hero-title--brand {
+    @apply uppercase tracking-[0.06em];
+  }
+
+  .page-hero-title--light {
+    @apply text-white;
+  }
+
+  .page-hero-tagline {
+    @apply mt-2 block font-sans text-[10px] font-semibold uppercase tracking-[0.24em] text-brand-red sm:text-[11px];
+  }
+
+  .page-hero-tagline--light {
+    @apply text-brand-red/90;
+  }
+
+  /* H2 sections */
   .section-title {
-    @apply font-heading text-2xl font-semibold leading-snug tracking-tight text-brand-dark sm:text-3xl md:text-4xl;
+    @apply font-heading text-[1.75rem] font-medium leading-[1.15] tracking-tight text-brand-dark sm:text-[2rem] md:text-[2.35rem];
+  }
+
+  /* H3 sous-sections */
+  .subsection-title {
+    @apply font-heading text-xl font-medium leading-snug tracking-tight text-brand-dark sm:text-2xl md:text-[1.65rem];
+  }
+
+  /* H1 fiche détail (hors hero plein écran) */
+  .page-detail-title {
+    @apply font-heading text-[1.875rem] font-medium leading-[1.1] tracking-tight text-brand-dark sm:text-4xl md:text-[2.65rem] lg:text-[2.85rem];
   }
 
   .form-input {
@@ -98,7 +142,7 @@
 
   /* ── Admin ── */
   .admin-page-title {
-    @apply font-heading text-2xl font-semibold tracking-tight text-brand-dark sm:text-3xl;
+    @apply font-heading text-2xl font-medium tracking-tight text-brand-dark sm:text-3xl;
   }
 
   .admin-card {

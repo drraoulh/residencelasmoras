@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { ArrowRight, CalendarX, Home, MessageCircle, X } from 'lucide-react';
 import type { Logement } from '../../types';
+import { getLogementPhoto } from '../../utils/logementPhoto';
 import { buildCatalogueSearchParams, formatSearchPeriod } from '../../utils/availability';
 
 interface UnavailableAlternativesModalProps {
@@ -76,7 +77,7 @@ export default function UnavailableAlternativesModal({
                   className="flex items-center gap-3 rounded-xl border border-stone-200/80 bg-white p-3"
                 >
                   <img
-                    src={logement.photos[0]}
+                    src={getLogementPhoto(logement.photos)}
                     alt={logement.nom}
                     className="h-14 w-14 shrink-0 rounded-lg object-cover"
                   />

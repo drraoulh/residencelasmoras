@@ -12,10 +12,13 @@ import {
   Tv,
   Wifi,
 } from 'lucide-react';
+import PageHeroHeading from '../../components/ui/PageHeroHeading';
 import BrandName from '../../components/ui/BrandName';
 import FaqSection from '../../components/ui/FaqSection';
 import GoogleReviews from '../../components/ui/GoogleReviews';
 import { faqItems } from '../../data/faq';
+import { usePageMeta } from '../../hooks/usePageMeta';
+import { PAGE_SEO } from '../../config/seo';
 import residenceLasMoras from '../../assets/residencelasmoras.jpeg';
 import residenceLasMoras1 from '../../assets/residencelasmoras1.jpeg';
 import residenceLasMoras2 from '../../assets/residencelasmoras2.jpeg';
@@ -38,6 +41,8 @@ const MAP_EMBED =
   'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d6237.579855042787!2d11.46227783168611!3d3.8416910906414037!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x108bcf3b9065b93b%3A0x625deca93be02be1!2sResidence%20las%20Moras!5e1!3m2!1sen!2sfr!4v1781078204189!5m2!1sen!2sfr';
 
 export default function About() {
+  usePageMeta(PAGE_SEO.about);
+
   return (
     <main className="bg-brand-white">
       {/* Hero */}
@@ -45,14 +50,19 @@ export default function About() {
         <img src={vueResidence} alt="LAS MORAS" className="absolute inset-0 h-full w-full object-cover object-top" />
         <div className="absolute inset-0 bg-stone-900/50" />
         <div className="relative z-10 mx-auto max-w-6xl px-4 pt-28 pb-16 text-center sm:px-6">
-          <div className="glass-on-image mx-auto inline-block">
-            <p className="section-label !text-white/60">À propos de nous</p>
-            <div className="mt-3 flex justify-center">
-              <BrandName variant="light" size="lg" />
-            </div>
-            <p className="mx-auto mt-4 max-w-lg text-sm leading-relaxed text-white/75">
-              Une résidence d'appartements meublés où chaque porte ouvre sur une nouvelle destination.
-            </p>
+          <div className="glass-on-image mx-auto inline-block max-w-xl">
+            <PageHeroHeading
+              label="À propos"
+              title={
+                <>
+                  L&apos;art de vivre
+                  <span className="block text-brand-red">naturellement</span>
+                </>
+              }
+              subtitle="Une résidence d'appartements meublés où chaque porte ouvre sur une nouvelle destination."
+              variant="light"
+              align="center"
+            />
           </div>
         </div>
       </section>
@@ -216,7 +226,7 @@ export default function About() {
       </section>
 
       {/* CTA */}
-      <section className="px-4 pb-20 sm:px-6">
+      <section className="px-4 pb-12 sm:px-6 sm:pb-14">
         <div className="mx-auto max-w-6xl">
           <div className="glass-card flex flex-col items-center justify-between gap-6 p-8 sm:flex-row">
             <div>
@@ -224,7 +234,7 @@ export default function About() {
               <p className="mt-3 text-sm text-brand-muted">Prêt pour votre prochain séjour ?</p>
             </div>
             <div className="flex gap-3">
-              <Link to="/catalogue" className="btn-accent">Réserver</Link>
+              <Link to="/catalogue" className="btn-accent">Voir les logements</Link>
               <Link to="/contact" className="btn-ghost">Contact</Link>
             </div>
           </div>

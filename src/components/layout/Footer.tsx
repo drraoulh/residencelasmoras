@@ -1,24 +1,15 @@
+import type { ReactNode } from 'react';
 import { Link } from 'react-router-dom';
-import { Lock } from 'lucide-react';
-import {
-  Clock,
-  Home,
-  Images,
-  Info,
-  Mail,
-  MapPin,
-  Phone,
-  Building2,
-} from 'lucide-react';
+import { ArrowUpRight, Clock, Mail, MapPin, Phone } from 'lucide-react';
 import BrandName from '../ui/BrandName';
 import logoLasmoras from '../../assets/logo lasmoras.jpeg';
 
 const navLinks = [
-  { to: '/', label: 'Accueil', icon: Home },
-  { to: '/catalogue', label: 'Logements', icon: Building2 },
-  { to: '/galerie', label: 'Galerie', icon: Images },
-  { to: '/a-propos', label: 'À propos de nous', icon: Info },
-  { to: '/contact', label: 'Contact', icon: Mail },
+  { to: '/', label: 'Accueil' },
+  { to: '/catalogue', label: 'Nos logements' },
+  { to: '/galerie', label: 'Galerie' },
+  { to: '/a-propos', label: 'À propos' },
+  { to: '/contact', label: 'Contact' },
 ];
 
 const contactItems = [
@@ -37,7 +28,7 @@ const contactItems = [
   {
     icon: MapPin,
     label: 'Adresse',
-    value: 'Nkolzie, Mendong, Yaoundé',
+    value: 'Nkolzie, Mendong — Yaoundé',
     href: 'https://share.google/GUJ0aaC0urzsl247t',
     external: true,
   },
@@ -61,7 +52,7 @@ const socials = [
   },
   {
     href: 'https://share.google/GUJ0aaC0urzsl247t',
-    label: 'Google',
+    label: 'Google Maps',
     type: 'google' as const,
   },
 ];
@@ -104,7 +95,7 @@ function GoogleIcon({ className }: { className?: string }) {
 }
 
 function SocialIcon({ type }: { type: (typeof socials)[number]['type'] }) {
-  const cls = 'h-4 w-4';
+  const cls = 'h-[17px] w-[17px]';
   switch (type) {
     case 'instagram':
       return <InstagramIcon className={cls} />;
@@ -117,118 +108,142 @@ function SocialIcon({ type }: { type: (typeof socials)[number]['type'] }) {
   }
 }
 
-export default function Footer() {
+function FooterHeading({ children }: { children: ReactNode }) {
   return (
-    <footer className="border-t border-stone-200/80 bg-brand-gray">
-      <div className="mx-auto max-w-6xl px-4 py-12 sm:px-8 sm:py-16 lg:px-10 xl:px-12">
-        <div className="grid grid-cols-1 gap-10 sm:gap-12 md:grid-cols-2 lg:grid-cols-3 lg:gap-x-14 lg:gap-y-0 xl:gap-x-20">
+    <h3 className="font-heading text-[11px] font-semibold uppercase tracking-[0.26em] text-white/40">
+      {children}
+    </h3>
+  );
+}
+
+function FooterLink({ to, children }: { to: string; children: ReactNode }) {
+  return (
+    <Link
+      to={to}
+      className="group inline-flex items-center gap-2.5 text-sm text-white/65 transition hover:text-white"
+    >
+      <span
+        className="h-px w-3 bg-brand-red/60 transition-all duration-300 group-hover:w-5 group-hover:bg-brand-red"
+        aria-hidden
+      />
+      {children}
+    </Link>
+  );
+}
+
+export default function Footer() {
+  const year = new Date().getFullYear();
+
+  return (
+    <footer className="relative border-t border-white/10 bg-brand-dark text-white">
+      <div
+        className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-brand-red/70 to-transparent"
+        aria-hidden
+      />
+
+      <div className="relative mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+        <div className="grid grid-cols-1 gap-10 py-12 sm:grid-cols-2 sm:gap-x-8 sm:gap-y-10 sm:py-14 lg:grid-cols-12 lg:gap-x-10 lg:py-16">
           {/* Marque */}
-          <div className="space-y-4 md:col-span-2 lg:col-span-1">
-            <div className="flex items-center gap-3">
+          <div className="space-y-5 sm:col-span-2 lg:col-span-4">
+            <div className="flex items-center gap-3.5">
               <img
                 src={logoLasmoras}
-                alt="LAS MORAS — L'Art de Vivre Naturellement"
-                className="h-14 w-auto shrink-0 rounded-xl object-contain ring-1 ring-stone-200/80"
+                alt="LAS MORAS"
+                className="h-14 w-14 shrink-0 rounded-xl object-cover ring-1 ring-white/15"
               />
-              <BrandName size="sm" />
+              <BrandName variant="light" size="md" />
             </div>
-            <p className="max-w-sm text-sm leading-relaxed text-brand-muted">
-              Résidence d'appartements meublés de standing à Yaoundé. Chaque logement est une
+
+            <p className="max-w-xs text-sm leading-relaxed text-white/50">
+              Résidence d&apos;appartements meublés de standing à Yaoundé. Chaque logement, une
               destination.
             </p>
-            <div className="inline-flex items-center gap-2 rounded-full border border-stone-200/80 bg-white/70 px-3.5 py-2 text-xs text-brand-muted">
+
+            <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-3.5 py-2 text-[11px] text-white/60">
               <Clock className="h-3.5 w-3.5 shrink-0 text-brand-red" strokeWidth={1.5} />
               Assistance 7j/7
             </div>
           </div>
 
           {/* Navigation */}
-          <div className="md:col-span-1 lg:col-span-1">
-            <p className="section-label !mb-4 !text-brand-red">Navigation</p>
-            <nav className="flex flex-col gap-0.5">
-              {navLinks.map(({ to, label, icon: Icon }) => (
-                <Link
-                  key={to}
-                  to={to}
-                  className="group flex items-center gap-3 rounded-xl px-2 py-2 text-sm text-brand-muted transition hover:bg-white/60 hover:text-brand-red"
-                >
-                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white/80 text-brand-red ring-1 ring-stone-200/60 transition group-hover:bg-red-50">
-                    <Icon className="h-4 w-4" strokeWidth={1.5} />
-                  </span>
+          <div className="lg:col-span-2 lg:col-start-5">
+            <FooterHeading>Explorer</FooterHeading>
+            <nav className="mt-5 flex flex-col gap-3">
+              {navLinks.map(({ to, label }) => (
+                <FooterLink key={to} to={to}>
                   {label}
-                </Link>
+                </FooterLink>
               ))}
             </nav>
           </div>
 
           {/* Contact */}
-          <div className="md:col-span-1 lg:col-span-1">
-            <p className="section-label !mb-4 !text-brand-red">Contact</p>
-            <div className="space-y-1">
+          <div className="lg:col-span-3">
+            <FooterHeading>Contact</FooterHeading>
+            <ul className="mt-5 space-y-3.5">
               {contactItems.map(({ icon: Icon, label, value, href, external }) => (
+                <li key={label}>
+                  <a
+                    href={href}
+                    target={external ? '_blank' : undefined}
+                    rel={external ? 'noreferrer' : undefined}
+                    className="group flex items-start gap-3"
+                  >
+                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-white/10 bg-white/[0.04] text-brand-red">
+                      <Icon className="h-3.5 w-3.5" strokeWidth={1.5} />
+                    </span>
+                    <span className="min-w-0 pt-0.5">
+                      <span className="block text-[10px] uppercase tracking-[0.18em] text-white/35">
+                        {label}
+                      </span>
+                      <span className="mt-0.5 block text-sm leading-snug text-white/80 transition group-hover:text-white">
+                        {value}
+                      </span>
+                    </span>
+                    {external && (
+                      <ArrowUpRight className="mt-1.5 h-3 w-3 shrink-0 text-white/20 group-hover:text-brand-red" />
+                    )}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Réseaux */}
+          <div className="sm:col-span-2 lg:col-span-3">
+            <FooterHeading>Suivez-nous</FooterHeading>
+            <p className="mt-5 text-sm leading-relaxed text-white/45">
+              Retrouvez la résidence sur nos réseaux.
+            </p>
+            <div className="mt-4 flex flex-wrap gap-2">
+              {socials.map((social) => (
                 <a
-                  key={label}
-                  href={href}
-                  target={external ? '_blank' : undefined}
-                  rel={external ? 'noreferrer' : undefined}
-                  className="group flex items-start gap-3 rounded-xl px-2 py-2.5 transition hover:bg-white/60 sm:items-center"
+                  key={social.label}
+                  href={social.href}
+                  target="_blank"
+                  rel="noreferrer"
+                  aria-label={social.label}
+                  title={social.label}
+                  className="flex h-10 w-10 items-center justify-center rounded-lg border border-white/10 bg-white/[0.04] text-white/55 transition hover:border-brand-red/40 hover:bg-brand-red/10 hover:text-white"
                 >
-                  <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white/80 text-brand-red ring-1 ring-stone-200/60 transition group-hover:bg-red-50 sm:mt-0">
-                    <Icon className="h-4 w-4" strokeWidth={1.5} />
-                  </span>
-                  <span className="min-w-0 space-y-0.5">
-                    <span className="block text-[10px] uppercase tracking-widest text-brand-muted">
-                      {label}
-                    </span>
-                    <span className="block break-words text-sm font-medium leading-snug text-brand-dark transition group-hover:text-brand-red">
-                      {value}
-                    </span>
-                  </span>
+                  <SocialIcon type={social.type} />
                 </a>
               ))}
-            </div>
-
-            {/* Réseaux sociaux */}
-            <div className="mt-8 border-t border-stone-200/70 pt-6">
-              <p className="section-label !mb-3 !text-brand-red">Suivez-nous</p>
-              <div className="flex flex-wrap gap-2.5">
-                {socials.map((social) => (
-                  <a
-                    key={social.label}
-                    href={social.href}
-                    target="_blank"
-                    rel="noreferrer"
-                    aria-label={social.label}
-                    className="group flex h-10 w-10 items-center justify-center rounded-xl border border-stone-200/80 bg-white/80 text-brand-muted transition hover:border-brand-red/30 hover:bg-red-50 hover:text-brand-red"
-                    title={social.label}
-                  >
-                    <SocialIcon type={social.type} />
-                  </a>
-                ))}
-              </div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Copyright */}
-      <div className="border-t border-stone-200/60 bg-white/40">
-        <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 px-4 py-6 text-center sm:flex-row sm:px-8 sm:text-left lg:px-10 xl:px-12">
-          <p className="flex max-w-full flex-wrap items-center justify-center gap-x-2 gap-y-1.5 text-xs leading-relaxed text-brand-muted sm:justify-start">
-            <MapPin className="h-3.5 w-3.5 shrink-0 text-brand-red" strokeWidth={1.5} />
-            <span>© {new Date().getFullYear()} LAS MORAS — L'Art de Vivre Naturellement</span>
+      {/* Barre basse */}
+      <div className="border-t border-white/[0.08] bg-black/20">
+        <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-3 px-4 py-5 text-center sm:flex-row sm:px-6 sm:text-left lg:px-8">
+          <p className="text-[11px] leading-relaxed text-white/35">
+            © {year} LAS MORAS — L&apos;Art de Vivre Naturellement
           </p>
-          <div className="flex shrink-0 flex-wrap items-center justify-center gap-x-4 gap-y-2 text-xs text-brand-muted sm:justify-end">
-            <span>Yaoundé, Cameroun</span>
-            <span className="hidden h-3 w-px bg-stone-300 sm:block" aria-hidden />
-            <Link
-              to="/admin/login"
-              className="inline-flex items-center gap-1.5 transition hover:text-brand-red"
-            >
-              <Lock className="h-3 w-3 shrink-0" strokeWidth={1.5} />
-              Administration
-            </Link>
-          </div>
+          <p className="inline-flex items-center gap-1.5 text-[11px] text-white/35">
+            <MapPin className="h-3 w-3 text-brand-red/70" strokeWidth={1.5} />
+            Yaoundé, Cameroun
+          </p>
         </div>
       </div>
     </footer>

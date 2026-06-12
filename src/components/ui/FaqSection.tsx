@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { WHATSAPP_LINK } from '../../utils/whatsapp';
 import {
   BedDouble,
   ChevronDown,
@@ -162,7 +163,7 @@ export default function FaqSection({
           </div>
           <div className="mt-4 flex flex-col gap-2 min-[400px]:flex-row sm:mt-0">
             <a
-              href="https://wa.me/237689888291"
+              href={WHATSAPP_LINK}
               target="_blank"
               rel="noreferrer"
               className="btn-accent w-full text-xs sm:w-auto"

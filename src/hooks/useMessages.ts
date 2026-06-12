@@ -20,13 +20,11 @@ export function useMessages() {
 
   const addMessage = useMutation({
     mutationFn: async (nouveauMessage: Omit<ContactMessage, 'id' | 'created_at' | 'lu'>) => {
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('contacts')
-        .insert({ ...nouveauMessage, lu: false })
-        .select()
-        .single();
+        .insert({ ...nouveauMessage, lu: false });
       if (error) throw error;
-      return data;
+      return nouveauMessage;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['messages'] });

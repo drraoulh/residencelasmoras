@@ -1,15 +1,19 @@
 import { Link } from 'react-router-dom';
 import { ArrowRight, Car, CarFront, ShieldCheck, Tv, Wifi, Wind } from 'lucide-react';
 import HeroSearchBar from '../../components/search/HeroSearchBar';
-import BrandName from '../../components/ui/BrandName';
+import PageHeroHeading from '../../components/ui/PageHeroHeading';
 import FaqSection from '../../components/ui/FaqSection';
 import GoogleReviews from '../../components/ui/GoogleReviews';
 import { faqItems } from '../../data/faq';
 import LogementCard from '../../components/properties/LogementCard';
 import { useLogements } from '../../hooks/useLogements';
 import { useGallery } from '../../hooks/useGallery';
+import { usePageMeta } from '../../hooks/usePageMeta';
+import { PAGE_SEO } from '../../config/seo';
+import { buildLodgingBusinessJsonLd } from '../../components/seo/SeoJsonLd';
 import { pickFeaturedLogementsByType } from '../../utils/logements';
 import { toGalleryViewModel } from '../../data/galleryImages';
+import { WHATSAPP_LINK } from '../../utils/whatsapp';
 import heroPrincipal from '../../assets/residencelasmoras3.jpeg';
 import vueResidence from '../../assets/Vue residence.jpeg';
 
@@ -27,8 +31,12 @@ const services = [
 ];
 
 export default function Home() {
-  const { logements } = useLogements();
+  const { logements, isLoading, error } = useLogements();
   const { galleryImages } = useGallery();
+  usePageMeta({
+    ...PAGE_SEO.home,
+    jsonLd: buildLodgingBusinessJsonLd(),
+  });
   const display = pickFeaturedLogementsByType(logements, 3);
   const welcomeGalleryPreview = toGalleryViewModel(galleryImages)
     .filter((img) => img.category === 'Intérieurs')
@@ -48,15 +56,12 @@ export default function Home() {
 
         <div className="relative z-10 mx-auto flex min-h-[72dvh] max-w-6xl flex-col justify-end px-4 pb-8 pt-24 min-[480px]:min-h-[80dvh] min-[480px]:pb-10 sm:px-6 sm:pt-28 lg:min-h-svh lg:pb-40 lg:pt-32">
           <div className="w-full max-w-xl border-l-2 border-brand-red pl-4 sm:max-w-2xl sm:pl-6">
-            <p className="text-[10px] font-medium uppercase tracking-[0.18em] text-white/60 sm:text-[11px] sm:tracking-[0.3em]">
-              Résidence meublée · Yaoundé
-            </p>
-            <div className="mt-3 sm:mt-4">
-              <BrandName variant="light" size="xl" />
-            </div>
-            <p className="mt-3 max-w-lg text-sm leading-relaxed text-white/75 sm:mt-4 sm:text-base">
-              Appartements meublés de standing, chaque espace une destination.
-            </p>
+            <PageHeroHeading
+              label="Résidence meublée · Yaoundé"
+              brand
+              variant="light"
+              subtitle="Appartements meublés de standing, chaque espace une destination."
+            />
             <div className="mt-5 flex flex-col gap-2.5 min-[400px]:flex-row min-[400px]:flex-wrap min-[400px]:items-center sm:mt-7 sm:gap-3">
               <Link to="/catalogue" className="btn-accent w-full min-[400px]:w-auto">
                 Nos logements
@@ -98,35 +103,54 @@ export default function Home() {
             </Link>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
-            {welcomeGalleryPreview.map((img, index) => (
+          <div className="grid grid-cols-2 gap-3 sm:gap-4">
+            {welcomeGalleryPreview[0] && (
               <Link
-                key={img.id}
                 to="/galerie"
-                className={`group relative overflow-hidden rounded-2xl ${
-                  index === 0 ? 'h-48 sm:h-56' : 'col-start-2 mt-8 h-40 sm:h-48'
-                }`}
+                className="group relative col-span-2 row-span-2 min-h-[200px] overflow-hidden rounded-2xl ring-1 ring-stone-200/60 sm:min-h-[280px] lg:col-span-1 lg:row-span-2 lg:min-h-[320px]"
               >
                 <img
-                  src={img.src}
-                  alt={img.label}
-                  className="h-full w-full object-cover transition duration-700 group-hover:scale-105"
+                  src={welcomeGalleryPreview[0].src}
+                  alt={welcomeGalleryPreview[0].label}
+                  className="absolute inset-0 h-full w-full object-cover transition duration-700 group-hover:scale-[1.04]"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent" />
-                <div className="absolute bottom-0 left-0 right-0 p-3 sm:p-4">
-                  <span className="text-[10px] font-medium uppercase tracking-widest text-brand-red">
-                    {img.category}
+                <div className="absolute inset-0 bg-gradient-to-t from-stone-950/75 via-stone-950/15 to-transparent" />
+                <div className="absolute bottom-0 left-0 right-0 p-4 sm:p-5">
+                  <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-brand-red">
+                    {welcomeGalleryPreview[0].category}
                   </span>
-                  <p className="mt-0.5 text-sm font-medium text-white">{img.label}</p>
+                  <p className="mt-1 font-heading text-lg font-medium text-white">
+                    {welcomeGalleryPreview[0].label}
+                  </p>
                 </div>
               </Link>
-            ))}
+            )}
+            {welcomeGalleryPreview[1] && (
+              <Link
+                to="/galerie"
+                className="group relative min-h-[140px] overflow-hidden rounded-2xl ring-1 ring-stone-200/60 sm:min-h-[160px] lg:min-h-[152px]"
+              >
+                <img
+                  src={welcomeGalleryPreview[1].src}
+                  alt={welcomeGalleryPreview[1].label}
+                  className="absolute inset-0 h-full w-full object-cover transition duration-700 group-hover:scale-[1.04]"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-stone-950/75 via-stone-950/15 to-transparent" />
+                <div className="absolute bottom-0 left-0 right-0 p-3 sm:p-4">
+                  <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-brand-red">
+                    {welcomeGalleryPreview[1].category}
+                  </span>
+                  <p className="mt-0.5 text-sm font-medium text-white">{welcomeGalleryPreview[1].label}</p>
+                </div>
+              </Link>
+            )}
             <Link
               to="/galerie"
-              className="col-start-2 row-start-2 mt-8 flex h-40 flex-col items-center justify-center rounded-2xl border border-dashed border-stone-300 bg-brand-gray text-center transition hover:border-brand-red sm:h-48"
+              className="group flex min-h-[120px] flex-col items-center justify-center rounded-2xl border border-dashed border-stone-300/90 bg-brand-gray/80 text-center transition hover:border-brand-red/40 hover:bg-brand-red/5 sm:min-h-[140px] lg:min-h-[152px]"
             >
-              <span className="text-sm font-medium text-brand-dark">Voir la galerie</span>
-              <ArrowRight className="mt-2 h-4 w-4 text-brand-red" />
+              <span className="font-heading text-base font-medium text-brand-dark">Voir la galerie</span>
+              <span className="mt-1 text-xs text-brand-muted">Toutes les photos</span>
+              <ArrowRight className="mt-2 h-4 w-4 text-brand-red transition group-hover:translate-x-0.5" />
             </Link>
           </div>
         </div>
@@ -149,9 +173,20 @@ export default function Home() {
           </div>
 
           <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3">
-            {display.map((l) => (
-              <LogementCard key={l.id} logement={l} />
-            ))}
+            {isLoading ? (
+              Array.from({ length: 3 }).map((_, index) => (
+                <div
+                  key={index}
+                  className="h-80 animate-pulse rounded-2xl bg-white ring-1 ring-stone-200/60"
+                />
+              ))
+            ) : error ? (
+              <div className="col-span-full rounded-2xl border border-red-200 bg-red-50 px-5 py-8 text-center text-sm text-brand-red">
+                Impossible de charger les logements pour le moment.
+              </div>
+            ) : (
+              display.map((l) => <LogementCard key={l.id} logement={l} />)
+            )}
           </div>
 
           <div className="mt-10 text-center sm:hidden">
@@ -229,7 +264,7 @@ export default function Home() {
       </section>
 
       {/* ── CTA minimal ── */}
-      <section className="px-4 py-16 sm:px-6 sm:py-20 lg:py-24">
+      <section className="px-4 pt-16 pb-12 sm:px-6 sm:pt-20 sm:pb-14 lg:pt-24 lg:pb-14">
         <div className="mx-auto max-w-6xl">
           <div className="glass-card flex flex-col items-center justify-between gap-6 p-6 text-center sm:gap-8 sm:p-8 sm:text-left md:flex-row md:p-10">
             <div className="min-w-0">
@@ -242,7 +277,7 @@ export default function Home() {
             <div className="flex w-full flex-col gap-2.5 sm:w-auto sm:flex-row sm:gap-3">
               <Link to="/catalogue" className="btn-accent w-full sm:w-auto">Voir les logements</Link>
               <a
-                href="https://wa.me/237689888291"
+                href={WHATSAPP_LINK}
                 target="_blank"
                 rel="noreferrer"
                 className="btn-ghost w-full sm:w-auto"

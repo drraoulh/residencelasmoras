@@ -17,6 +17,8 @@ import { buildConfirmUrl, buildReservationRef } from '../../utils/confirmReserva
 import { createReservationRequest } from '../../utils/reservationRequest';
 import { openReservationWhatsApp } from '../../utils/whatsapp';
 import { getAmenityIcon } from '../../utils/amenityIcons';
+import { usePageMeta } from '../../hooks/usePageMeta';
+import { buildPageTitle, absoluteUrl, SITE } from '../../config/seo';
 
 const defaultEquipements = [
   { name: 'Climatisation', icon: Wind },
@@ -51,6 +53,42 @@ export default function PropertyDetails() {
   const [showAlternatives, setShowAlternatives] = useState(false);
   const property = logements.find((logement) => logement.id === id);
 
+  const propertyJsonLd = useMemo(() => {
+    if (!property) return undefined;
+    return {
+      '@context': 'https://schema.org',
+      '@type': 'Accommodation',
+      name: property.nom,
+      description: property.description,
+      url: absoluteUrl(`/logements/${property.id}`),
+      floorSize: property.surface
+        ? { '@type': 'QuantitativeValue', value: property.surface, unitCode: 'MTK' }
+        : undefined,
+      address: {
+        '@type': 'PostalAddress',
+        addressLocality: SITE.address.city,
+        addressCountry: SITE.address.country,
+      },
+      offers: {
+        '@type': 'Offer',
+        price: property.prix,
+        priceCurrency: 'XAF',
+        availability: property.statut === 'disponible' ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
+      },
+    };
+  }, [property]);
+
+  usePageMeta({
+    title: property
+      ? buildPageTitle(`${property.nom} — location meublée`)
+      : buildPageTitle('Logement'),
+    description: property
+      ? `${property.type} meublé à Yaoundé — ${property.prix.toLocaleString('fr-FR')} FCFA/nuit. ${property.description.slice(0, 120)}…`
+      : 'Fiche logement de la Résidence LAS MORAS à Yaoundé.',
+    path: property ? `/logements/${property.id}` : undefined,
+    jsonLd: propertyJsonLd,
+  });
+
   const urlArrivee = searchParams.get('arrivee') ?? '';
   const urlDepart = searchParams.get('depart') ?? '';
 
@@ -80,28 +118,6 @@ export default function PropertyDetails() {
     urlDepart,
   ]);
 
-  if (!property) {
-    return (
-      <div className="flex min-h-[60vh] flex-col items-center justify-center bg-brand-gray px-4 py-16 text-center">
-        <h1 className="text-3xl font-bold text-brand-dark">Logement introuvable</h1>
-        <p className="mt-3 text-gray-600">Ce logement n'existe pas ou a été retiré du catalogue.</p>
-        <Link to="/catalogue" className="btn-primary mt-6">
-          Retour au catalogue
-        </Link>
-      </div>
-    );
-  }
-
-  const weeklyPrice = property.prix * 6;
-  const monthlyPrice = property.prix * 25;
-  const isUnavailableByStatut = property.statut === 'occupe' || property.statut === 'maintenance';
-  const hasBookingDates = Boolean(bookingForm.dateArrivee || urlArrivee);
-  const isUnavailable = bookingAvailability
-    ? !bookingAvailability.available
-    : hasBookingDates
-      ? false
-      : isUnavailableByStatut;
-
   const alternatives = useMemo(() => {
     const arrivee = bookingForm.dateArrivee || urlArrivee;
     const depart = bookingForm.dateDepart || urlDepart;
@@ -117,6 +133,33 @@ export default function PropertyDetails() {
     urlArrivee,
     urlDepart,
   ]);
+
+  if (!property) {
+    return (
+      <div className="flex min-h-[60vh] flex-col items-center justify-center bg-brand-gray px-4 py-16 text-center">
+        <h1 className="text-3xl font-bold text-brand-dark">Logement introuvable</h1>
+        <p className="mt-3 text-gray-600">Ce logement n'existe pas ou a été retiré du catalogue.</p>
+        <Link to="/catalogue" className="btn-primary mt-6">
+          Retour au catalogue
+        </Link>
+      </div>
+    );
+  }
+
+  const weeklyPrice = property.prix * 6;
+  const monthlyPrice = property.prix * 25;
+  const isUnavailableByStatut = property.statut === 'occupe' || property.statut === 'maintenance';
+  const arrivee = bookingForm.dateArrivee || urlArrivee;
+  const depart = bookingForm.dateDepart || urlDepart;
+  const hasBookingDates = Boolean(arrivee);
+  const hasInvalidDates = Boolean(arrivee && depart && depart <= arrivee);
+  const isUnavailable = hasInvalidDates
+    ? true
+    : bookingAvailability
+      ? !bookingAvailability.available
+      : hasBookingDates
+        ? false
+        : isUnavailableByStatut;
 
   const galleryPhotos = property.photos.length >= 4
     ? property.photos.slice(0, 4)
@@ -199,9 +242,7 @@ export default function PropertyDetails() {
         </Link>
 
         <div className="mb-6 sm:mb-8">
-          <h1 className="text-2xl font-bold tracking-tight text-brand-dark sm:text-4xl">
-            {property.nom}
-          </h1>
+          <h1 className="page-detail-title">{property.nom}</h1>
           <div className="mt-3 flex flex-wrap items-center gap-2 text-sm font-medium text-gray-600 sm:text-base">
             <MapPin className="h-5 w-5 text-brand-red" />
             <span>Yaoundé, Cameroun</span>
@@ -219,55 +260,61 @@ export default function PropertyDetails() {
           </div>
         </div>
 
-        <div
-          className={`mb-10 grid overflow-hidden rounded-2xl shadow-sm ${
-            galleryPhotos.length >= 4
-              ? 'h-[320px] grid-cols-1 sm:h-[420px] lg:h-[50vh] lg:min-h-[400px] lg:grid-cols-4 lg:gap-2'
-              : 'grid-cols-1 gap-2 sm:grid-cols-2'
-          }`}
-        >
+        <div className="mb-10">
           {galleryPhotos.length >= 4 ? (
             <>
-              <div className="h-full lg:col-span-2">
-                <img
-                  src={galleryPhotos[0]}
-                  alt={property.nom}
-                  className="h-full w-full object-cover"
-                />
-              </div>
-              <div className="hidden h-full grid-cols-2 gap-2 lg:col-span-2 lg:grid">
-                {galleryPhotos.slice(1, 4).map((photo, index) => (
+              <div className="flex gap-2 overflow-x-auto pb-2 snap-x snap-mandatory lg:hidden">
+                {galleryPhotos.map((photo, index) => (
                   <img
-                    key={`${photo}-${index}`}
+                    key={`${photo}-mobile-${index}`}
                     src={photo}
-                    alt={`Vue ${index + 2}`}
-                    className="h-full w-full object-cover"
+                    alt={`${property.nom} — vue ${index + 1}`}
+                    className="h-56 w-[85vw] max-w-md shrink-0 snap-center rounded-2xl object-cover sm:h-72"
                   />
                 ))}
               </div>
+              <div className="hidden h-[50vh] min-h-[400px] grid-cols-4 gap-2 overflow-hidden rounded-2xl shadow-sm lg:grid">
+                <div className="col-span-2 h-full">
+                  <img
+                    src={galleryPhotos[0]}
+                    alt={property.nom}
+                    className="h-full w-full object-cover"
+                  />
+                </div>
+                <div className="col-span-2 grid h-full grid-cols-2 gap-2">
+                  {galleryPhotos.slice(1, 4).map((photo, index) => (
+                    <img
+                      key={`${photo}-desktop-${index}`}
+                      src={photo}
+                      alt={`${property.nom} — vue ${index + 2}`}
+                      className="h-full w-full object-cover"
+                    />
+                  ))}
+                </div>
+              </div>
             </>
           ) : (
-            galleryPhotos.map((photo, index) => (
-              <img
-                key={`${photo}-${index}`}
-                src={photo}
-                alt={`${property.nom} - vue ${index + 1}`}
-                className="h-48 w-full object-cover sm:h-64"
-              />
-            ))
+            <div className="grid grid-cols-1 gap-2 overflow-hidden rounded-2xl shadow-sm sm:grid-cols-2">
+              {galleryPhotos.map((photo, index) => (
+                <img
+                  key={`${photo}-${index}`}
+                  src={photo}
+                  alt={`${property.nom} — vue ${index + 1}`}
+                  className="h-48 w-full object-cover sm:h-64"
+                />
+              ))}
+            </div>
           )}
         </div>
 
         <div className="grid grid-cols-1 gap-10 lg:grid-cols-3 lg:gap-12">
           <div className="lg:col-span-2">
-            <h2 className="mb-4 text-xl font-bold text-brand-dark sm:text-2xl">
-              À propos de ce logement
-            </h2>
+            <h2 className="section-title mb-4">À propos de ce logement</h2>
             <p className="mb-10 text-base leading-relaxed text-gray-600 sm:text-lg">
               {property.description}
             </p>
 
-            <h3 className="mb-6 text-xl font-bold text-brand-dark sm:text-2xl">
+            <h3 className="subsection-title mb-6">
               Ce que propose ce logement
             </h3>
             <div className="mb-12 grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 md:gap-5">
@@ -282,9 +329,7 @@ export default function PropertyDetails() {
               ))}
             </div>
 
-            <h3 className="mb-6 text-xl font-bold text-brand-dark sm:text-2xl">
-              Tarification détaillée
-            </h3>
+            <h3 className="subsection-title mb-6">Tarification détaillée</h3>
             <div className="flex flex-col items-center justify-around gap-6 rounded-2xl border border-gray-100 bg-white p-6 shadow-sm md:flex-row md:gap-8 md:p-8">
               {[
                 ['Par nuit', property.prix],
@@ -320,7 +365,7 @@ export default function PropertyDetails() {
                 <span className="font-semibold text-gray-500"> / nuit</span>
               </div>
 
-              <h3 className="mb-6 text-xl font-bold text-brand-dark">Demande de réservation</h3>
+              <h2 className="subsection-title mb-6">Demande de réservation</h2>
 
               {bookingAvailability?.available && hasBookingDates && (
                 <div className="mb-5 rounded-xl bg-green-50 px-4 py-3 text-sm font-semibold text-green-700 ring-1 ring-green-100">
@@ -333,7 +378,13 @@ export default function PropertyDetails() {
                 </div>
               )}
 
-              {isUnavailable && (
+              {hasInvalidDates && (
+                <div className="mb-5 rounded-xl bg-red-50 px-4 py-3 text-sm font-semibold text-brand-red ring-1 ring-red-100">
+                  La date de départ doit être postérieure à la date d&apos;arrivée.
+                </div>
+              )}
+
+              {isUnavailable && !hasInvalidDates && (
                 <div className="mb-5 rounded-xl bg-orange-50 px-4 py-3 text-sm font-semibold text-orange-700 ring-1 ring-orange-100">
                   <p>
                     {bookingAvailability
@@ -440,7 +491,7 @@ export default function PropertyDetails() {
                 <button
                   type="submit"
                   className="btn-accent mt-2 w-full py-4 text-lg disabled:cursor-not-allowed disabled:opacity-50"
-                  disabled={isUnavailable || submitting || !bookingForm.dateArrivee}
+                  disabled={isUnavailable || submitting || !bookingForm.dateArrivee || hasInvalidDates}
                 >
                   {submitting ? 'Enregistrement…' : 'Enregistrer et ouvrir WhatsApp'}
                 </button>

@@ -3,8 +3,11 @@ import { useSearchParams } from 'react-router-dom';
 import { CalendarDays, Filter, Search, X } from 'lucide-react';
 import CtaBanner from '../../components/ui/CtaBanner';
 import LogementCard from '../../components/properties/LogementCard';
+import PageHeroHeading from '../../components/ui/PageHeroHeading';
 import { useAvailabilitySlots } from '../../hooks/useAvailabilitySlots';
 import { useLogements } from '../../hooks/useLogements';
+import { usePageMeta } from '../../hooks/usePageMeta';
+import { PAGE_SEO } from '../../config/seo';
 import { formatSearchPeriod, getLogementAvailability } from '../../utils/availability';
 import residenceLasMoras1 from '../../assets/residencelasmoras1.jpeg';
 
@@ -13,7 +16,8 @@ function todayIso() {
 }
 
 export default function LogementsList() {
-  const { logements } = useLogements();
+  const { logements, isLoading, error } = useLogements();
+  usePageMeta(PAGE_SEO.catalogue);
   const { slots } = useAvailabilitySlots();
   const [searchParams, setSearchParams] = useSearchParams();
 
@@ -24,6 +28,7 @@ export default function LogementsList() {
 
   useEffect(() => {
     setFilterType(searchParams.get('type') ?? 'Tous');
+    setMaxBudget(searchParams.get('budget') ?? '');
     setDateArrivee(searchParams.get('arrivee') ?? '');
     setDateDepart(searchParams.get('depart') ?? '');
   }, [searchParams]);
@@ -105,13 +110,17 @@ export default function LogementsList() {
         <div className="absolute inset-0 bg-gradient-to-r from-stone-950/70 via-stone-900/40 to-transparent" />
 
         <div className="relative z-10 mx-auto w-full max-w-7xl px-4 py-28 sm:px-6 lg:px-8">
-          <p className="section-label !text-white/60">Catalogue</p>
-          <h1 className="section-title mt-2 text-white sm:mt-3">
-            Nos <span className="text-brand-red">logements</span>
-          </h1>
-          <p className="mt-4 max-w-2xl text-sm leading-relaxed text-white/75 sm:text-base">
-            Découvrez notre sélection d'appartements et studios haut de gamme à Yaoundé.
-          </p>
+          <PageHeroHeading
+            label="Catalogue"
+            title={
+              <>
+                Nos
+                <span className="text-brand-red"> logements</span>
+              </>
+            }
+            subtitle="Découvrez notre sélection d'appartements et studios haut de gamme à Yaoundé."
+            variant="light"
+          />
           {hasDateSearch && (
             <div className="mt-6 inline-flex items-center gap-2 rounded-xl border border-white/15 bg-black/25 px-4 py-2.5 text-sm text-white backdrop-blur-md">
               <CalendarDays className="h-4 w-4 text-brand-red" />
@@ -208,13 +217,31 @@ export default function LogementsList() {
         </div>
 
         <p className="mb-6 text-sm font-medium text-gray-500">
-          {filteredLogements.length} logement{filteredLogements.length > 1 ? 's' : ''} trouvé
-          {filteredLogements.length > 1 ? 's' : ''}
-          {hasDateSearch &&
-            ` · ${availableCount} disponible${availableCount > 1 ? 's' : ''} sur la période`}
+          {isLoading
+            ? 'Chargement des logements…'
+            : `${filteredLogements.length} logement${filteredLogements.length > 1 ? 's' : ''} trouvé${filteredLogements.length > 1 ? 's' : ''}${
+                hasDateSearch
+                  ? ` · ${availableCount} disponible${availableCount > 1 ? 's' : ''} sur la période`
+                  : ''
+              }`}
         </p>
 
-        {filteredLogements.length > 0 ? (
+        {error && (
+          <div className="mb-6 rounded-2xl border border-red-200 bg-red-50 px-5 py-4 text-sm text-brand-red">
+            Impossible de charger les logements. Vérifiez votre connexion puis réessayez.
+          </div>
+        )}
+
+        {isLoading ? (
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 lg:gap-8">
+            {Array.from({ length: 6 }).map((_, index) => (
+              <div
+                key={index}
+                className="h-80 animate-pulse rounded-2xl bg-white ring-1 ring-gray-100"
+              />
+            ))}
+          </div>
+        ) : filteredLogements.length > 0 ? (
           <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 lg:gap-8">
             {filteredLogements.map(({ logement, availability }) => (
               <LogementCard
