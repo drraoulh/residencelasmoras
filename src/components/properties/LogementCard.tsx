@@ -36,6 +36,10 @@ export default function LogementCard({
         <img
           src={getLogementPhoto(logement.photos)}
           alt={logement.nom}
+          width={448}
+          height={224}
+          loading="lazy"
+          decoding="async"
           className={`h-full w-full object-cover transition duration-700 group-hover:scale-105 ${
             hasDateSearch
               ? !isAvailableForDates

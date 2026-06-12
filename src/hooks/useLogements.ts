@@ -6,7 +6,7 @@ export function useLogements() {
   const queryClient = useQueryClient();
 
   const { data: logements = [], isLoading, error } = useQuery({
-    queryKey: ['logements'],
+    queryKey: ['logements', 'admin'],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('logements')

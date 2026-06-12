@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { ArrowRight, CalendarCheck, Search } from 'lucide-react';
 import LogementActions from '../ui/LogementActions';
 import { useAvailabilitySlots } from '../../hooks/useAvailabilitySlots';
-import { useLogements } from '../../hooks/useLogements';
+import { useLogementsList } from '../../hooks/useLogementsList';
 import type { Logement } from '../../types';
 import {
   buildCatalogueSearchParams,
@@ -25,45 +25,29 @@ function todayIso() {
 
 export default function HeroSearchBar() {
   const navigate = useNavigate();
-  const { logements, isLoading: logementsLoading } = useLogements();
-  const { slots, isLoading: slotsLoading } = useAvailabilitySlots();
-
   const [arrivee, setArrivee] = useState('');
   const [depart, setDepart] = useState('');
   const [type, setType] = useState('Tous');
   const [error, setError] = useState('');
   const [hasSearched, setHasSearched] = useState(false);
-  const [results, setResults] = useState<SearchResult[]>([]);
+
+  const { logements, isLoading: logementsLoading } = useLogementsList();
+  const hasArrivalSearch = Boolean(arrivee);
+  const { slots, isLoading: slotsLoading } = useAvailabilitySlots({
+    enabled: hasSearched && hasArrivalSearch,
+  });
 
   const types = useMemo(
     () => Array.from(new Set(logements.map((logement) => logement.type))),
     [logements],
   );
 
-  const isSearching = logementsLoading || slotsLoading;
-  const hasArrivalSearch = Boolean(arrivee);
+  const isSearching = logementsLoading || (hasSearched && hasArrivalSearch && slotsLoading);
 
-  const validate = () => {
-    if (depart && !arrivee) return 'Choisissez une date d\'arrivée.';
-    if (arrivee && depart && depart <= arrivee) {
-      return 'La date de départ doit être après la date d\'arrivée.';
-    }
-    return '';
-  };
+  const results = useMemo<SearchResult[]>(() => {
+    if (!hasSearched || (hasArrivalSearch && slotsLoading)) return [];
 
-  const runSearch = () => {
-    const validationError = validate();
-    if (validationError) {
-      setError(validationError);
-      setHasSearched(false);
-      setResults([]);
-      return;
-    }
-
-    setError('');
-    setHasSearched(true);
-
-    const filtered = logements
+    return logements
       .filter((logement) => type === 'Tous' || logement.type === type)
       .map((logement) => ({
         logement,
@@ -82,8 +66,35 @@ export default function HeroSearchBar() {
         }
         return aAvailable ? -1 : 1;
       });
+  }, [
+    arrivee,
+    depart,
+    hasArrivalSearch,
+    hasSearched,
+    logements,
+    slots,
+    slotsLoading,
+    type,
+  ]);
 
-    setResults(filtered);
+  const validate = () => {
+    if (depart && !arrivee) return 'Choisissez une date d\'arrivée.';
+    if (arrivee && depart && depart <= arrivee) {
+      return 'La date de départ doit être après la date d\'arrivée.';
+    }
+    return '';
+  };
+
+  const runSearch = () => {
+    const validationError = validate();
+    if (validationError) {
+      setError(validationError);
+      setHasSearched(false);
+      return;
+    }
+
+    setError('');
+    setHasSearched(true);
   };
 
   const goToCatalogue = () => {
@@ -180,7 +191,7 @@ export default function HeroSearchBar() {
         </p>
       )}
 
-      {hasSearched && !error && (
+      {hasSearched && !error && !isSearching && (
         <div className="mt-4 rounded-xl border border-stone-200/80 bg-white p-4 sm:p-5">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
@@ -222,6 +233,10 @@ export default function HeroSearchBar() {
                     <img
                       src={getLogementPhoto(logement.photos)}
                       alt={logement.nom}
+                      width={64}
+                      height={64}
+                      loading="lazy"
+                      decoding="async"
                       className="h-16 w-16 shrink-0 rounded-xl object-cover sm:h-14 sm:w-14"
                     />
                     <div className="min-w-0 flex-1">

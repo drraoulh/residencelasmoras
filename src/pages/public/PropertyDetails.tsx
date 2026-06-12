@@ -5,7 +5,8 @@ import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { ArrowLeft, Car, Coffee, MapPin, Shield, Sparkles, Tv, Wifi, Wind } from 'lucide-react';
 import UnavailableAlternativesModal from '../../components/booking/UnavailableAlternativesModal';
 import { useAvailabilitySlots } from '../../hooks/useAvailabilitySlots';
-import { useLogements } from '../../hooks/useLogements';
+import { useLogement } from '../../hooks/useLogement';
+import { useLogementsList } from '../../hooks/useLogementsList';
 import { findAvailableLogements } from '../../utils/planning';
 import {
   formatSearchPeriod,
@@ -42,16 +43,20 @@ export default function PropertyDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { logements } = useLogements();
+  const { data: property, isLoading: propertyLoading } = useLogement(id);
   const queryClient = useQueryClient();
-  const { slots } = useAvailabilitySlots();
   const arriveeInputRef = useRef<HTMLInputElement>(null);
   const [bookingForm, setBookingForm] = useState(initialBookingForm);
   const [sent, setSent] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState('');
   const [showAlternatives, setShowAlternatives] = useState(false);
-  const property = logements.find((logement) => logement.id === id);
+
+  const urlArrivee = searchParams.get('arrivee') ?? '';
+  const urlDepart = searchParams.get('depart') ?? '';
+  const needsAvailability = Boolean(urlArrivee || bookingForm.dateArrivee);
+  const { logements: logementsList } = useLogementsList({ enabled: needsAvailability || showAlternatives });
+  const { slots } = useAvailabilitySlots({ enabled: needsAvailability });
 
   const propertyJsonLd = useMemo(() => {
     if (!property) return undefined;
@@ -89,9 +94,6 @@ export default function PropertyDetails() {
     jsonLd: propertyJsonLd,
   });
 
-  const urlArrivee = searchParams.get('arrivee') ?? '';
-  const urlDepart = searchParams.get('depart') ?? '';
-
   useEffect(() => {
     if (urlArrivee || urlDepart) {
       setBookingForm((current) => ({
@@ -122,17 +124,26 @@ export default function PropertyDetails() {
     const arrivee = bookingForm.dateArrivee || urlArrivee;
     const depart = bookingForm.dateDepart || urlDepart;
     if (!property || !arrivee || bookingAvailability?.available) return [];
-    return findAvailableLogements(logements, slots, arrivee, depart || undefined, property.id);
+    return findAvailableLogements(logementsList, slots, arrivee, depart || undefined, property.id);
   }, [
     bookingAvailability?.available,
     bookingForm.dateArrivee,
     bookingForm.dateDepart,
-    logements,
+    logementsList,
     property,
     slots,
     urlArrivee,
     urlDepart,
   ]);
+
+  if (propertyLoading) {
+    return (
+      <div className="flex min-h-[60vh] flex-col items-center justify-center bg-brand-gray px-4 py-16">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-brand-red border-t-transparent" />
+        <p className="mt-3 text-sm text-brand-muted">Chargement du logement…</p>
+      </div>
+    );
+  }
 
   if (!property) {
     return (

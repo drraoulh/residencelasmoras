@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { MessageCircle, Sparkles, X } from 'lucide-react';
 import { useAvailabilitySlots } from '../../hooks/useAvailabilitySlots';
-import { useLogements } from '../../hooks/useLogements';
+import { useLogementsList } from '../../hooks/useLogementsList';
 import { buildConfirmUrl, buildReservationRef } from '../../utils/confirmReservation';
 import {
   getLogementAvailability,
@@ -42,8 +42,6 @@ export default function ReservationRequestModal({
   depart: initialDepart = '',
 }: ReservationRequestModalProps) {
   const queryClient = useQueryClient();
-  const { logements } = useLogements();
-  const { slots } = useAvailabilitySlots();
   const arriveeRef = useRef<HTMLInputElement>(null);
 
   const [activeLogement, setActiveLogement] = useState({
@@ -61,6 +59,9 @@ export default function ReservationRequestModal({
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [showAlternatives, setShowAlternatives] = useState(false);
+
+  const { logements } = useLogementsList({ enabled: open });
+  const { slots } = useAvailabilitySlots({ enabled: open && Boolean(arrivee) });
 
   const logement = logements.find((item) => item.id === activeLogement.id);
 

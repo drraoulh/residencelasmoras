@@ -3,9 +3,12 @@ import { supabase } from '../lib/supabaseClient';
 import type { AvailabilitySlot } from '../utils/availability';
 import { filterActiveBlockingSlots, todayIso } from '../utils/reservationLifecycle';
 
-export function useAvailabilitySlots() {
+export function useAvailabilitySlots(options?: { enabled?: boolean }) {
+  const enabled = options?.enabled ?? true;
+
   const { data: slots = [], isLoading, error, isError } = useQuery({
     queryKey: ['availability-slots'],
+    enabled,
     queryFn: async () => {
       const today = todayIso();
       const { data, error: queryError } = await supabase

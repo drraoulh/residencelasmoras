@@ -1,21 +1,29 @@
+import { lazy, Suspense } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, Car, CarFront, ShieldCheck, Tv, Wifi, Wind } from 'lucide-react';
-import HeroSearchBar from '../../components/search/HeroSearchBar';
 import PageHeroHeading from '../../components/ui/PageHeroHeading';
 import FaqSection from '../../components/ui/FaqSection';
 import GoogleReviews from '../../components/ui/GoogleReviews';
 import { faqItems } from '../../data/faq';
 import LogementCard from '../../components/properties/LogementCard';
-import { useLogements } from '../../hooks/useLogements';
-import { useGallery } from '../../hooks/useGallery';
+import { useLogementsList } from '../../hooks/useLogementsList';
 import { usePageMeta } from '../../hooks/usePageMeta';
 import { PAGE_SEO } from '../../config/seo';
 import { buildLodgingBusinessJsonLd } from '../../components/seo/SeoJsonLd';
 import { pickFeaturedLogementsByType } from '../../utils/logements';
-import { toGalleryViewModel } from '../../data/galleryImages';
 import { WHATSAPP_LINK } from '../../utils/whatsapp';
-import heroPrincipal from '../../assets/residencelasmoras3.jpeg';
+import galleryPreview1 from '../../assets/residencelasmoras1.jpeg';
+import galleryPreview2 from '../../assets/residencelasmoras2.jpeg';
 import vueResidence from '../../assets/Vue residence.jpeg';
+
+const HeroSearchBar = lazy(() => import('../../components/search/HeroSearchBar'));
+
+const HERO_IMAGE = '/images/hero-lcp.jpeg';
+
+const welcomeGalleryPreview = [
+  { id: 'preview-1', src: galleryPreview1, label: 'Salon lumineux', category: 'Intérieurs' },
+  { id: 'preview-2', src: galleryPreview2, label: 'Espace de vie', category: 'Intérieurs' },
+];
 
 const services = [
   { icon: Wifi, title: 'Wi-Fi fibre', description: 'Connexion stable pour travailler et streamer.' },
@@ -31,24 +39,24 @@ const services = [
 ];
 
 export default function Home() {
-  const { logements, isLoading, error } = useLogements();
-  const { galleryImages } = useGallery();
+  const { logements, isLoading, error } = useLogementsList();
   usePageMeta({
     ...PAGE_SEO.home,
     jsonLd: buildLodgingBusinessJsonLd(),
   });
   const display = pickFeaturedLogementsByType(logements, 3);
-  const welcomeGalleryPreview = toGalleryViewModel(galleryImages)
-    .filter((img) => img.category === 'Intérieurs')
-    .slice(0, 2);
 
   return (
     <main className="overflow-x-hidden bg-brand-white">
       {/* ── Hero plein écran — texte en bas, recherche en carte flottante ── */}
       <section className="relative min-h-[72dvh] min-[480px]:min-h-[80dvh] lg:min-h-svh">
         <img
-          src={heroPrincipal}
+          src={HERO_IMAGE}
           alt="LAS MORAS — L'Art de Vivre Naturellement"
+          width={1920}
+          height={1280}
+          fetchPriority="high"
+          decoding="async"
           className="absolute inset-0 h-full w-full object-cover object-[center_30%] sm:object-center"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-stone-950/95 via-stone-900/50 to-stone-900/15 sm:from-stone-950/90 sm:via-stone-900/35" />
@@ -78,7 +86,15 @@ export default function Home() {
 
       <section className="relative z-20 px-3 pb-6 pt-4 sm:px-6 sm:pb-8 md:-mt-20 md:pt-0 lg:-mt-28">
         <div className="mx-auto w-full max-w-4xl rounded-xl border border-stone-200/80 bg-white p-1 shadow-[0_16px_48px_rgba(0,0,0,0.1)] sm:rounded-2xl sm:p-1.5 sm:shadow-[0_24px_64px_rgba(0,0,0,0.12)]">
-          <HeroSearchBar />
+          <Suspense
+            fallback={
+              <div className="rounded-xl bg-brand-gray/50 p-8 text-center text-sm text-brand-muted">
+                Chargement de la recherche…
+              </div>
+            }
+          >
+            <HeroSearchBar />
+          </Suspense>
         </div>
       </section>
 
@@ -112,6 +128,10 @@ export default function Home() {
                 <img
                   src={welcomeGalleryPreview[0].src}
                   alt={welcomeGalleryPreview[0].label}
+                  width={800}
+                  height={600}
+                  loading="lazy"
+                  decoding="async"
                   className="absolute inset-0 h-full w-full object-cover transition duration-700 group-hover:scale-[1.04]"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-stone-950/75 via-stone-950/15 to-transparent" />
@@ -133,6 +153,10 @@ export default function Home() {
                 <img
                   src={welcomeGalleryPreview[1].src}
                   alt={welcomeGalleryPreview[1].label}
+                  width={600}
+                  height={450}
+                  loading="lazy"
+                  decoding="async"
                   className="absolute inset-0 h-full w-full object-cover transition duration-700 group-hover:scale-[1.04]"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-stone-950/75 via-stone-950/15 to-transparent" />
@@ -236,6 +260,10 @@ export default function Home() {
         <img
           src={vueResidence}
           alt="Vue panoramique — Résidence LAS MORAS"
+          width={1920}
+          height={800}
+          loading="lazy"
+          decoding="async"
           className="h-56 w-full object-cover object-center min-[400px]:h-72 sm:h-80 md:h-96"
         />
         <div className="absolute inset-0 bg-stone-900/50" />

@@ -5,7 +5,7 @@ import CtaBanner from '../../components/ui/CtaBanner';
 import LogementCard from '../../components/properties/LogementCard';
 import PageHeroHeading from '../../components/ui/PageHeroHeading';
 import { useAvailabilitySlots } from '../../hooks/useAvailabilitySlots';
-import { useLogements } from '../../hooks/useLogements';
+import { useLogementsList } from '../../hooks/useLogementsList';
 import { usePageMeta } from '../../hooks/usePageMeta';
 import { PAGE_SEO } from '../../config/seo';
 import { formatSearchPeriod, getLogementAvailability } from '../../utils/availability';
@@ -16,15 +16,20 @@ function todayIso() {
 }
 
 export default function LogementsList() {
-  const { logements, isLoading, error } = useLogements();
-  usePageMeta(PAGE_SEO.catalogue);
-  const { slots } = useAvailabilitySlots();
   const [searchParams, setSearchParams] = useSearchParams();
 
   const [filterType, setFilterType] = useState(searchParams.get('type') ?? 'Tous');
   const [maxBudget, setMaxBudget] = useState(searchParams.get('budget') ?? '');
   const [dateArrivee, setDateArrivee] = useState(searchParams.get('arrivee') ?? '');
   const [dateDepart, setDateDepart] = useState(searchParams.get('depart') ?? '');
+
+  const hasDateSearch = Boolean(
+    dateArrivee && (!dateDepart || dateDepart > dateArrivee),
+  );
+
+  const { logements, isLoading, error } = useLogementsList();
+  usePageMeta(PAGE_SEO.catalogue);
+  const { slots } = useAvailabilitySlots({ enabled: hasDateSearch });
 
   useEffect(() => {
     setFilterType(searchParams.get('type') ?? 'Tous');
@@ -36,10 +41,6 @@ export default function LogementsList() {
   const propertyTypes = useMemo(
     () => Array.from(new Set(logements.map((logement) => logement.type))),
     [logements],
-  );
-
-  const hasDateSearch = Boolean(
-    dateArrivee && (!dateDepart || dateDepart > dateArrivee),
   );
 
   const filteredLogements = useMemo(() => {
