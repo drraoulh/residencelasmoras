@@ -21,7 +21,8 @@ export function useAvailabilitySlots(options?: { enabled?: boolean }) {
       return filterActiveBlockingSlots((data ?? []) as AvailabilitySlot[]);
     },
     retry: 2,
-    staleTime: 30_000,
+    staleTime: 2 * 60_000,
+    gcTime: 15 * 60_000,
     refetchInterval: 2 * 60_000,
     refetchIntervalInBackground: false,
   });

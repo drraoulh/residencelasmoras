@@ -3,6 +3,7 @@ import { BrowserRouter, Navigate, Outlet, Route, Routes } from 'react-router-dom
 import { QueryClientProvider } from '@tanstack/react-query';
 import { queryClient } from './lib/queryClient';
 import { useLiveDataSync } from './hooks/useLiveDataSync';
+import { useSupabaseKeepAlive } from './hooks/useSupabaseKeepAlive';
 
 import Footer from './components/layout/Footer';
 import Navbar from './components/layout/Navbar';
@@ -43,6 +44,7 @@ function LazyPage({ children }: { children: ReactNode }) {
 }
 
 function AppProviders({ children }: { children: ReactNode }) {
+  useSupabaseKeepAlive();
   useLiveDataSync();
   return <>{children}</>;
 }

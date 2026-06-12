@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { liveQueryKeys, queryClient } from '../lib/queryClient';
+import { pingSupabaseDatabase } from '../lib/supabaseKeepAlive';
 import { supabase } from '../lib/supabaseClient';
 
 const REFETCH_INTERVAL_MS = 3 * 60_000;
@@ -10,12 +11,13 @@ function refreshLiveData() {
   });
 }
 
-/** Garde la connexion Supabase active et rafraîchit les données après inactivité. */
+/** Rafraîchit les données React Query après inactivité ou reconnexion. */
 export function useLiveDataSync() {
   useEffect(() => {
     const onVisible = async () => {
       if (document.visibilityState !== 'visible') return;
       await supabase.auth.getSession();
+      await pingSupabaseDatabase().catch(() => undefined);
       refreshLiveData();
     };
 

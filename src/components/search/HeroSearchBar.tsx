@@ -34,7 +34,7 @@ export default function HeroSearchBar() {
   const { logements, isLoading: logementsLoading } = useLogementsList();
   const hasArrivalSearch = Boolean(arrivee);
   const { slots, isLoading: slotsLoading } = useAvailabilitySlots({
-    enabled: hasSearched && hasArrivalSearch,
+    enabled: hasArrivalSearch,
   });
 
   const types = useMemo(
