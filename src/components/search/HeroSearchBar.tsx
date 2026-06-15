@@ -231,7 +231,7 @@ export default function HeroSearchBar() {
                 >
                   <div className="flex min-w-0 items-start gap-3">
                     <img
-                      src={getLogementPhoto(logement.photos)}
+                      src={getLogementPhoto(logement.photos, logement.id)}
                       alt={logement.nom}
                       width={64}
                       height={64}

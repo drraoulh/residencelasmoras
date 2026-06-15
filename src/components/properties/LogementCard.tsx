@@ -34,7 +34,7 @@ export default function LogementCard({
     <article className="group overflow-hidden rounded-2xl border border-stone-200/60 bg-white transition hover:shadow-[0_8px_30px_rgba(0,0,0,0.06)]">
       <Link to={detailUrl} className="relative block h-52 overflow-hidden sm:h-56">
         <img
-          src={getLogementPhoto(logement.photos)}
+          src={getLogementPhoto(logement.photos, logement.id)}
           alt={logement.nom}
           width={448}
           height={224}

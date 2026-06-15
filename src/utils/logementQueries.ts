@@ -19,11 +19,11 @@ export type LogementCatalogRow = {
 export function isPublicPhotoUrl(value: string) {
   const trimmed = value.trim();
   if (!trimmed || trimmed.startsWith('data:')) return false;
-  return (
-    trimmed.startsWith('http://') ||
-    trimmed.startsWith('https://') ||
-    trimmed.startsWith('/')
-  );
+  if (trimmed.startsWith('http://') || trimmed.startsWith('https://') || trimmed.startsWith('/')) {
+    return true;
+  }
+  // Chemins Storage Supabase parfois enregistrés sans protocole
+  return trimmed.includes('/storage/v1/object/public/');
 }
 
 export function filterPublicPhotoUrls(photos?: string[] | null) {

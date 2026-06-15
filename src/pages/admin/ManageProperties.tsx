@@ -1,5 +1,6 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import type { ChangeEvent, FormEvent } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import {
   Copy,
   Edit,
@@ -14,6 +15,13 @@ import {
 } from 'lucide-react';
 import type { Logement, LogementStatus } from '../../types';
 import { useLogements } from '../../hooks/useLogements';
+import { isPublicPhotoUrl } from '../../utils/logementQueries';
+import { repairAllLogementPhotos } from '../../utils/logementPhoto';
+import {
+  logementHasEmbeddedPhotos,
+  normalizeLogementPhotos,
+  uploadLogementImage,
+} from '../../utils/logementStorage';
 
 const emptyForm = {
   nom: '',
@@ -31,17 +39,10 @@ function statusClasses(status: LogementStatus) {
   return 'bg-orange-50 text-orange-700 ring-orange-100';
 }
 
-function readFileAsDataUrl(file: File) {
-  return new Promise<string>((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(String(reader.result));
-    reader.onerror = reject;
-    reader.readAsDataURL(file);
-  });
-}
-
 export default function ManageProperties() {
+  const queryClient = useQueryClient();
   const { logements, addLogement, updateLogement, deleteLogement } = useLogements();
+  const [draftStorageId] = useState(() => crypto.randomUUID());
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingLogement, setEditingLogement] = useState<Logement | null>(null);
   const [previewLogement, setPreviewLogement] = useState<Logement | null>(null);
@@ -50,6 +51,19 @@ export default function ManageProperties() {
   const [statusFilter, setStatusFilter] = useState<'tous' | LogementStatus>('tous');
   const [typeFilter, setTypeFilter] = useState('Tous');
   const [sortBy, setSortBy] = useState<'recent' | 'prix-asc' | 'prix-desc' | 'nom'>('recent');
+  const [uploadingPhotos, setUploadingPhotos] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [repairingPhotos, setRepairingPhotos] = useState(false);
+  const [repairProgress, setRepairProgress] = useState<{ done: number; total: number } | null>(null);
+  const [formError, setFormError] = useState('');
+  const autoRepairAttempted = useRef(false);
+
+  const storageLogementId = editingLogement?.id ?? draftStorageId;
+
+  const needsPhotoRepair = useMemo(
+    () => logements.some((logement) => logementHasEmbeddedPhotos(logement.photos)),
+    [logements],
+  );
 
   const types = useMemo(
     () => Array.from(new Set(logements.map((logement) => logement.type))).sort(),
@@ -102,11 +116,16 @@ export default function ManageProperties() {
     setIsModalOpen(false);
     setEditingLogement(null);
     setForm(emptyForm);
+    setFormError('');
   };
 
   const addPhotoUrl = () => {
     const url = form.newPhotoUrl.trim();
-    if (!url) return;
+    if (!url || !isPublicPhotoUrl(url)) {
+      setFormError('Collez une URL publique (https://…) vers une image.');
+      return;
+    }
+    setFormError('');
     setForm((current) => ({
       ...current,
       photos: [...current.photos, url],
@@ -120,12 +139,22 @@ export default function ManageProperties() {
     );
     if (files.length === 0) return;
 
-    const dataUrls = await Promise.all(files.map(readFileAsDataUrl));
-    setForm((current) => ({
-      ...current,
-      photos: [...current.photos, ...dataUrls],
-    }));
-    event.target.value = '';
+    setUploadingPhotos(true);
+    setFormError('');
+    try {
+      const urls = await Promise.all(
+        files.map((file) => uploadLogementImage(file, storageLogementId)),
+      );
+      setForm((current) => ({
+        ...current,
+        photos: [...current.photos, ...urls],
+      }));
+    } catch (error) {
+      setFormError(error instanceof Error ? error.message : 'Échec du téléversement des photos.');
+    } finally {
+      setUploadingPhotos(false);
+      event.target.value = '';
+    }
   };
 
   const removePhoto = (indexToRemove: number) => {
@@ -152,25 +181,71 @@ export default function ManageProperties() {
     updateLogement.mutate({ id: logement.id, updates: { statut } });
   };
 
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    setFormError('');
+    setSaving(true);
 
-    const draft = {
-      nom: form.nom.trim(),
-      type: form.type,
-      prix: Number(form.prix),
-      statut: form.statut,
-      description: form.description.trim(),
-      photos: form.photos,
-      surface: editingLogement?.surface,
-      equipements: editingLogement?.equipements ?? ['Climatisation', 'Wi-Fi', 'Parking'],
-    };
+    try {
+      const baseDraft = {
+        nom: form.nom.trim(),
+        type: form.type,
+        prix: Number(form.prix),
+        statut: form.statut,
+        description: form.description.trim(),
+        surface: editingLogement?.surface,
+        equipements: editingLogement?.equipements ?? ['Climatisation', 'Wi-Fi', 'Parking'],
+      };
 
-    if (editingLogement) updateLogement.mutate({ id: editingLogement.id, updates: draft });
-    else addLogement.mutate(draft);
+      if (editingLogement) {
+        const photos = await normalizeLogementPhotos(form.photos, editingLogement.id);
+        await updateLogement.mutateAsync({ id: editingLogement.id, updates: { ...baseDraft, photos } });
+      } else {
+        const urlPhotos = form.photos.filter(isPublicPhotoUrl);
+        const created = await addLogement.mutateAsync({ ...baseDraft, photos: urlPhotos });
+        const photos = await normalizeLogementPhotos(form.photos, created.id);
+        if (photos.length !== urlPhotos.length) {
+          await updateLogement.mutateAsync({ id: created.id, updates: { photos } });
+        }
+      }
 
-    closeModal();
+      await queryClient.invalidateQueries({ queryKey: ['logements'] });
+      closeModal();
+    } catch (error) {
+      setFormError(error instanceof Error ? error.message : 'Impossible d’enregistrer le logement.');
+    } finally {
+      setSaving(false);
+    }
   };
+
+  const repairAllPhotos = async () => {
+    setRepairingPhotos(true);
+    setRepairProgress(null);
+    try {
+      const { migrated } = await repairAllLogementPhotos(
+        logements,
+        async (id, photos) => {
+          await updateLogement.mutateAsync({ id, updates: { photos } });
+        },
+        (done, total) => setRepairProgress({ done, total }),
+      );
+      await queryClient.invalidateQueries({ queryKey: ['logements'] });
+      if (migrated > 0) {
+        window.alert(`${migrated} logement${migrated > 1 ? 's' : ''} migré${migrated > 1 ? 's' : ''} vers Storage.`);
+      }
+    } catch (error) {
+      window.alert(error instanceof Error ? error.message : 'Échec de la migration des photos.');
+    } finally {
+      setRepairingPhotos(false);
+      setRepairProgress(null);
+    }
+  };
+
+  useEffect(() => {
+    if (!needsPhotoRepair || autoRepairAttempted.current || logements.length === 0) return;
+    autoRepairAttempted.current = true;
+    void repairAllPhotos();
+  }, [needsPhotoRepair, logements.length]);
 
   return (
     <div className="mx-auto max-w-7xl">
@@ -192,6 +267,28 @@ export default function ManageProperties() {
           Ajouter un logement
         </button>
       </div>
+
+      {needsPhotoRepair && (
+        <div className="mb-6 rounded-lg border border-amber-200 bg-amber-50 px-4 py-4 text-sm text-amber-950">
+          <p className="font-semibold">Photos invisibles sur le site public</p>
+          <p className="mt-1 text-amber-900/90">
+            Certains logements utilisent encore des images intégrées (base64). Le catalogue public
+            n’affiche que les URLs Storage — migrez les photos pour les rendre visibles aux visiteurs.
+          </p>
+          <button
+            type="button"
+            onClick={() => void repairAllPhotos()}
+            disabled={repairingPhotos}
+            className="mt-3 inline-flex items-center gap-2 rounded-lg bg-amber-900 px-4 py-2 text-xs font-bold text-white transition hover:bg-amber-950 disabled:opacity-60"
+          >
+            {repairingPhotos
+              ? repairProgress
+                ? `Migration en cours… (${repairProgress.done}/${repairProgress.total})`
+                : 'Migration en cours…'
+              : 'Migrer toutes les photos vers Storage'}
+          </button>
+        </div>
+      )}
 
       <div className="mb-6 grid gap-4 rounded-lg border border-gray-100 bg-white p-4 shadow-sm lg:grid-cols-[1fr_170px_170px_170px]">
         <label className="relative block">
@@ -430,12 +527,12 @@ export default function ManageProperties() {
                   <div>
                     <h3 className="font-extrabold text-brand-dark">Images du logement</h3>
                     <p className="mt-1 text-sm font-medium text-gray-500">
-                      Ajoutez plusieurs photos depuis votre ordinateur ou avec une URL.
+                      Les photos sont enregistrées sur Supabase Storage (visibles sur le site public).
                     </p>
                   </div>
-                  <label className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-lg bg-brand-dark px-4 py-3 text-sm font-bold text-white transition hover:bg-black">
+                  <label className={`inline-flex cursor-pointer items-center justify-center gap-2 rounded-lg bg-brand-dark px-4 py-3 text-sm font-bold text-white transition hover:bg-black ${uploadingPhotos ? 'pointer-events-none opacity-60' : ''}`}>
                     <Upload className="h-4 w-4" />
-                    Importer images
+                    {uploadingPhotos ? 'Téléversement…' : 'Importer images'}
                     <input
                       type="file"
                       accept="image/*"
@@ -502,6 +599,12 @@ export default function ManageProperties() {
                 )}
               </div>
 
+              {formError && (
+                <p className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-brand-red">
+                  {formError}
+                </p>
+              )}
+
               <div className="flex flex-col-reverse gap-3 border-t border-gray-100 pt-5 sm:flex-row sm:justify-end">
                 <button
                   type="button"
@@ -512,10 +615,10 @@ export default function ManageProperties() {
                 </button>
                 <button
                   type="submit"
-                  disabled={form.photos.length === 0}
+                  disabled={form.photos.length === 0 || uploadingPhotos || saving}
                   className="rounded-lg bg-brand-red px-5 py-3 font-bold text-white transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
                 >
-                  {editingLogement ? 'Enregistrer' : 'Creer le logement'}
+                  {saving ? 'Enregistrement…' : editingLogement ? 'Enregistrer' : 'Creer le logement'}
                 </button>
               </div>
             </form>

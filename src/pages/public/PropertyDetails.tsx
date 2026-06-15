@@ -20,6 +20,7 @@ import { openReservationWhatsApp } from '../../utils/whatsapp';
 import { getAmenityIcon } from '../../utils/amenityIcons';
 import { usePageMeta } from '../../hooks/usePageMeta';
 import { buildPageTitle, absoluteUrl, SITE } from '../../config/seo';
+import { getLogementPhoto } from '../../utils/logementPhoto';
 
 const defaultEquipements = [
   { name: 'Climatisation', icon: Wind },
@@ -172,9 +173,11 @@ export default function PropertyDetails() {
         ? false
         : isUnavailableByStatut;
 
-  const galleryPhotos = property.photos.length >= 4
-    ? property.photos.slice(0, 4)
-    : property.photos;
+  const displayPhotos =
+    property.photos.length > 0 ? property.photos : [getLogementPhoto(null, property.id)];
+
+  const galleryPhotos =
+    displayPhotos.length >= 4 ? displayPhotos.slice(0, 4) : displayPhotos;
 
   const equipements = property.equipements?.length
     ? property.equipements.map((name) => ({ name, icon: getAmenityIcon(name) }))

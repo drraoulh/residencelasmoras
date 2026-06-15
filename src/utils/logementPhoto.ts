@@ -1,7 +1,14 @@
-import defaultPhoto from '../assets/residencelasmoras1.jpeg';
-import { isPublicPhotoUrl } from './logementQueries';
+export {
+  getLogementPhoto,
+  pickLogementFallbackPhoto,
+  repairAllLogementPhotos,
+  repairSingleLogementPhotos,
+} from './logementPhotos';
 
-export function getLogementPhoto(photos?: string[] | null, fallback = defaultPhoto) {
-  const photo = photos?.find((item) => isPublicPhotoUrl(item));
-  return photo || fallback;
-}
+export {
+  isDataUrl,
+  logementHasEmbeddedPhotos,
+  normalizeLogementPhotos,
+  uploadLogementImage,
+  uploadLogementImageFromDataUrl,
+} from './logementStorage';

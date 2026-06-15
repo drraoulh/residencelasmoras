@@ -32,8 +32,14 @@ AS $$
       FROM unnest(l.photos) AS p
       WHERE p IS NOT NULL
         AND btrim(p) <> ''
+        AND length(p) < 8192
         AND p NOT LIKE 'data:%'
-        AND (p LIKE 'http://%' OR p LIKE 'https://%' OR p LIKE '/%')
+        AND (
+          p LIKE 'http://%'
+          OR p LIKE 'https://%'
+          OR p LIKE '/%'
+          OR p LIKE '%/storage/v1/object/public/%'
+        )
       LIMIT 1
     ) AS cover_photo
   FROM public.logements l
@@ -76,8 +82,14 @@ AS $$
           FROM unnest(l.photos) AS p
           WHERE p IS NOT NULL
             AND btrim(p) <> ''
+            AND length(p) < 8192
             AND p NOT LIKE 'data:%'
-            AND (p LIKE 'http://%' OR p LIKE 'https://%' OR p LIKE '/%')
+            AND (
+              p LIKE 'http://%'
+              OR p LIKE 'https://%'
+              OR p LIKE '/%'
+              OR p LIKE '%/storage/v1/object/public/%'
+            )
           LIMIT 12
         ) filtered
       ),

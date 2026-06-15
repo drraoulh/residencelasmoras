@@ -77,7 +77,7 @@ export default function UnavailableAlternativesModal({
                   className="flex items-center gap-3 rounded-xl border border-stone-200/80 bg-white p-3"
                 >
                   <img
-                    src={getLogementPhoto(logement.photos)}
+                    src={getLogementPhoto(logement.photos, logement.id)}
                     alt={logement.nom}
                     className="h-14 w-14 shrink-0 rounded-lg object-cover"
                   />
