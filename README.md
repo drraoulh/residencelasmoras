@@ -26,7 +26,7 @@ Les messages du formulaire de contact sont enregistrés dans `contacts`, puis co
 
 ## Migration de la base existante
 
-La migration `20261106073646_secure_existing_lasmoras.sql` est une **mise à niveau du schéma existant**, pas une installation sur une base vide. Elle a été appliquée au projet Lasmoras. Ne pas la réexécuter à la main. Les tests utilisent un schéma minimal représentatif dans `tests/fixtures/existing-schema.sql`.
+La migration `20261106073906_secure_existing_lasmoras.sql` est une **mise à niveau du schéma existant**, pas une installation sur une base vide. Elle a été appliquée au projet Lasmoras. Ne pas la réexécuter à la main. Les tests utilisent un schéma minimal représentatif dans `tests/fixtures/existing-schema.sql`.
 
 La migration préserve les colonnes et données existantes, ajoute les rôles et la date de libération, restreint les politiques RLS, corrige la suppression en cascade et protège les fonctions SQL internes d’envoi d’e-mails. Les deux opérateurs existants sont conservés : le compte de la résidence est administrateur, le second est gestionnaire.
 

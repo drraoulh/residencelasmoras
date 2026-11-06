@@ -18,7 +18,7 @@ await db.exec(
   `insert into public.reservations(logement_id,client_nom,client_email,client_telephone,date_arrivee,date_depart,nombre_nuits,montant_total,montant_paye,statut_reservation) values('${property.id}','Existing','old@example.com','123','2026-01-01','2026-01-03',2,20000,15000,'terminee')`,
 );
 await db.exec(
-  load("../supabase/migrations/20261106073646_secure_existing_lasmoras.sql"),
+  load("../supabase/migrations/20261106073906_secure_existing_lasmoras.sql"),
 );
 assert.equal(
   (await db.query("select montant_paye from public.reservations")).rows[0]
