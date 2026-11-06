@@ -1,131 +1,189 @@
-import { Car, Coffee, MapPin, Shield, Tv, Wifi, Wind } from 'lucide-react';
-
-const mockProperty = {
-  id: '1',
-  nom: 'Appartement VIP Bastos',
-  type: 'Appartement',
-  surface: 120,
-  prix_nuit: 75000,
-  prix_semaine: 450000,
-  prix_mois: 1500000,
-  description:
-    "Magnifique appartement de haut standing situé au cœur du quartier résidentiel de Bastos. Idéal pour vos séjours d'affaires ou de tourisme. Sécurité 24/7, vue imprenable sur la ville, meubles importés et équipements dernier cri.",
-  equipements: [
-    { name: 'Climatisation', icon: Wind },
-    { name: 'Wi-Fi Fibre', icon: Wifi },
-    { name: 'Parking Sécurisé', icon: Car },
-    { name: 'Smart TV', icon: Tv },
-    { name: 'Machine à café', icon: Coffee },
-    { name: 'Gardien 24/7', icon: Shield },
-  ],
-  photos: [
-    'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&q=80&w=1200',
-    'https://images.unsplash.com/photo-1502672260266-1c1e52f1590c?auto=format&fit=crop&q=80&w=800',
-    'https://images.unsplash.com/photo-1484154218962-a197022b5858?auto=format&fit=crop&q=80&w=800',
-    'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&q=80&w=800',
-  ],
-};
-
+import { useState } from "react";
+import type { FormEvent } from "react";
+import { Link, useParams } from "react-router-dom";
+import { useProperties } from "../../context/Properties";
+import { supabase } from "../../lib/supabase";
 export default function PropertyDetails() {
-  const property = mockProperty;
-
-  return (
-    <div className="min-h-screen bg-brand-gray pb-16 sm:pb-20">
-      <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
-        <div className="mb-6 sm:mb-8">
-          <h1 className="text-2xl font-extrabold tracking-tight text-brand-dark sm:text-4xl">
-            {property.nom}
-          </h1>
-          <div className="mt-3 flex flex-wrap items-center gap-2 text-sm font-medium text-gray-600 sm:text-base">
-            <MapPin className="h-5 w-5 text-brand-red" />
-            <span>Quartier Bastos, Yaoundé</span>
-            <span className="rounded-full bg-white px-3 py-1 text-sm">{property.type}</span>
-            <span className="rounded-full bg-white px-3 py-1 text-sm">{property.surface} m²</span>
-          </div>
-        </div>
-
-        <div className="mb-10 grid h-[320px] grid-cols-1 overflow-hidden rounded-2xl shadow-sm sm:h-[420px] lg:h-[50vh] lg:min-h-[400px] lg:grid-cols-4 lg:gap-4 lg:rounded-3xl">
-          <div className="h-full lg:col-span-2">
-            <img src={property.photos[0]} alt={property.nom} className="h-full w-full object-cover" />
-          </div>
-          <div className="hidden h-full grid-cols-2 gap-4 lg:col-span-2 lg:grid">
-            {property.photos.slice(1).map((photo, index) => (
-              <img key={photo} src={photo} alt={`Vue ${index + 2}`} className="h-full w-full object-cover" />
-            ))}
-            <div className="relative h-full overflow-hidden">
-              <img src={property.photos[0]} alt="Plus de photos" className="h-full w-full object-cover brightness-50" />
-              <div className="absolute inset-0 flex items-center justify-center text-xl font-bold text-white">
-                +12 Photos
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 gap-10 lg:grid-cols-3 lg:gap-12">
-          <div className="lg:col-span-2">
-            <h2 className="mb-4 text-xl font-bold text-brand-dark sm:text-2xl">À propos de ce logement</h2>
-            <p className="mb-10 text-base leading-relaxed text-gray-600 sm:text-lg">{property.description}</p>
-
-            <h3 className="mb-6 text-xl font-bold text-brand-dark sm:text-2xl">Ce que propose ce logement</h3>
-            <div className="mb-12 grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 md:gap-6">
-              {property.equipements.map((eq) => (
-                <div key={eq.name} className="flex items-center gap-4 rounded-xl border border-gray-100 bg-white p-4 text-gray-700 shadow-sm">
-                  <eq.icon className="h-6 w-6 flex-shrink-0 text-brand-red" />
-                  <span className="text-sm font-semibold">{eq.name}</span>
-                </div>
-              ))}
-            </div>
-
-            <h3 className="mb-6 text-xl font-bold text-brand-dark sm:text-2xl">Tarification détaillée</h3>
-            <div className="flex flex-col items-center justify-around gap-6 rounded-2xl border border-gray-100 bg-white p-6 shadow-sm md:flex-row md:gap-8 md:rounded-3xl md:p-8">
-              {[
-                ['Par Nuit', property.prix_nuit],
-                ['Par Semaine', property.prix_semaine],
-                ['Par Mois', property.prix_mois],
-              ].map(([label, price], index) => (
-                <div key={label} className="flex w-full flex-col items-center gap-6 md:flex-row">
-                  {index > 0 && <div className="hidden h-16 w-px bg-gray-200 md:block" />}
-                  <div className="w-full text-center">
-                    <p className="mb-2 text-sm font-bold uppercase tracking-wider text-gray-500">{label}</p>
-                    <p className={`text-2xl font-extrabold sm:text-3xl ${index === 0 ? 'text-brand-red' : 'text-brand-dark'}`}>
-                      {Number(price).toLocaleString('fr-FR')} <span className="text-lg">FCFA</span>
-                    </p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="lg:col-span-1">
-            <div className="rounded-2xl border border-gray-100 bg-white p-5 shadow-[0_8px_30px_rgb(0,0,0,0.08)] sm:p-8 lg:sticky lg:top-24 lg:rounded-3xl">
-              <div className="mb-8 border-b border-gray-100 pb-6">
-                <span className="text-2xl font-extrabold text-brand-red sm:text-3xl">
-                  {property.prix_nuit.toLocaleString('fr-FR')} FCFA
-                </span>
-                <span className="font-semibold text-gray-500"> / nuit</span>
-              </div>
-
-              <h3 className="mb-6 text-xl font-bold text-brand-dark">Demande de réservation</h3>
-              <form className="flex flex-col gap-5">
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                  <input type="text" placeholder="Prénom" className="h-12 rounded-xl bg-gray-50 px-4 font-medium outline-none ring-1 ring-gray-200 focus:ring-2 focus:ring-brand-red" required />
-                  <input type="text" placeholder="Nom" className="h-12 rounded-xl bg-gray-50 px-4 font-medium outline-none ring-1 ring-gray-200 focus:ring-2 focus:ring-brand-red" required />
-                </div>
-                <input type="email" placeholder="Email" className="h-12 rounded-xl bg-gray-50 px-4 font-medium outline-none ring-1 ring-gray-200 focus:ring-2 focus:ring-brand-red" required />
-                <input type="tel" placeholder="Téléphone" className="h-12 rounded-xl bg-gray-50 px-4 font-medium outline-none ring-1 ring-gray-200 focus:ring-2 focus:ring-brand-red" required />
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                  <input type="date" className="h-12 rounded-xl bg-gray-50 px-4 font-medium text-gray-700 outline-none ring-1 ring-gray-200 focus:ring-2 focus:ring-brand-red" required />
-                  <input type="date" className="h-12 rounded-xl bg-gray-50 px-4 font-medium text-gray-700 outline-none ring-1 ring-gray-200 focus:ring-2 focus:ring-brand-red" required />
-                </div>
-                <button type="submit" className="mt-2 w-full rounded-xl bg-brand-red py-4 text-lg font-bold text-white transition hover:bg-red-700 hover:shadow-[0_8px_20px_rgba(213,0,0,0.3)] active:scale-95">
-                  Demander une réservation
-                </button>
-                <p className="text-center text-xs font-medium text-gray-500">Aucun montant ne vous sera débité pour le moment.</p>
-              </form>
-            </div>
-          </div>
-        </div>
+  const { id } = useParams();
+  const { logements, loading, error, refresh } = useProperties();
+  const property = logements.find((l) => l.id === id);
+  const [photo, setPhoto] = useState(0);
+  const [busy, setBusy] = useState(false);
+  const [message, setMessage] = useState("");
+  const [arrival, setArrival] = useState("");
+  if (loading)
+    return (
+      <p className="p-10" role="status">
+        Chargement du logement…
+      </p>
+    );
+  if (error)
+    return (
+      <div className="panel" role="alert">
+        {error}
+        <button onClick={() => void refresh()}>Réessayer</button>
       </div>
-    </div>
+    );
+  if (!property)
+    return (
+      <div className="panel">
+        <h1>Ce logement n’est plus disponible.</h1>
+        <Link to="/catalogue">Voir le catalogue</Link>
+      </div>
+    );
+  const reserve = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!supabase || !property || busy) return;
+    const form = e.currentTarget;
+    const values = new FormData(form);
+    if (String(values.get("depart")) <= arrival) {
+      setMessage("Le départ doit être postérieur à l’arrivée.");
+      return;
+    }
+    setBusy(true);
+    const { error } = await supabase.from("reservations").insert({
+      logement_id: property.id,
+      client_nom: values.get("nom"),
+      client_email: values.get("email"),
+      client_telephone: values.get("telephone"),
+      date_arrivee: arrival,
+      date_depart: values.get("depart"),
+    });
+    setBusy(false);
+    setMessage(
+      error
+        ? "Demande non envoyée. Réessayez ou contactez la résidence."
+        : "Votre demande a été envoyée. Notre équipe vous contactera pour confirmer votre séjour.",
+    );
+    if (!error) {
+      form.reset();
+      setArrival("");
+    }
+  };
+  return (
+    <main className="max-w-7xl mx-auto px-4 py-10 space-y-8">
+      <Link to="/catalogue">← Retour au catalogue</Link>
+      <h1 className="text-3xl font-bold">{property.nom}</h1>
+      <p>
+        {property.type}
+        {property.surface > 0 ? ` · ${property.surface} m²` : ""} ·{" "}
+        {property.statut_actuel === "occupe"
+          ? "Occupé"
+          : property.statut_actuel === "libere_prochainement"
+            ? `Disponible à partir du ${property.date_liberation}`
+            : "Disponible"}
+      </p>
+      <img
+        src={property.photos[photo] ?? property.photos[0]}
+        alt={property.nom}
+        className="w-full h-80 sm:h-[480px] object-cover rounded-2xl"
+      />
+      <div className="flex gap-3 overflow-x-auto">
+        {property.photos.map((src, index) => (
+          <button
+            key={src}
+            onClick={() => setPhoto(index)}
+            aria-label={`Voir la photo ${index + 1}`}
+            aria-pressed={photo === index}
+          >
+            <img
+              src={src}
+              alt=""
+              className="w-24 h-20 object-cover rounded-lg"
+            />
+          </button>
+        ))}
+      </div>
+      <div className="grid lg:grid-cols-3 gap-8">
+        <section className="lg:col-span-2 space-y-6">
+          <h2 className="text-2xl font-bold">À propos de ce logement</h2>
+          <p className="whitespace-pre-line">{property.description}</p>
+          <h2 className="text-2xl font-bold">Équipements</h2>
+          <div className="flex flex-wrap gap-3">
+            {property.equipements.map((eq) => (
+              <span className="notice" key={eq}>
+                {eq}
+              </span>
+            ))}
+          </div>
+        </section>
+        <section className="panel space-y-5">
+          <h2 className="text-2xl font-bold text-brand-red">
+            {property.prix_nuit.toLocaleString("fr-FR")} FCFA / nuit
+          </h2>
+          <h3 className="font-bold">Demande de réservation</h3>
+          {message && (
+            <p role="status" className="notice">
+              {message}
+            </p>
+          )}
+          <form onSubmit={reserve} className="space-y-4">
+            <fieldset
+              disabled={busy || property.statut_actuel === "occupe"}
+              className="space-y-4"
+            >
+              <label>
+                Nom complet
+                <input
+                  name="nom"
+                  required
+                  maxLength={150}
+                  autoComplete="name"
+                />
+              </label>
+              <label>
+                E-mail
+                <input
+                  name="email"
+                  type="email"
+                  autoComplete="email"
+                  required
+                />
+              </label>
+              <label>
+                Téléphone
+                <input
+                  name="telephone"
+                  type="tel"
+                  autoComplete="tel"
+                  required
+                />
+              </label>
+              <label>
+                Arrivée
+                <input
+                  type="date"
+                  min={
+                    property.statut_actuel === "libere_prochainement" &&
+                    property.date_liberation &&
+                    property.date_liberation >
+                      new Date().toLocaleDateString("en-CA")
+                      ? property.date_liberation
+                      : new Date().toLocaleDateString("en-CA")
+                  }
+                  required
+                  value={arrival}
+                  onChange={(e) => setArrival(e.target.value)}
+                />
+              </label>
+              <label>
+                Départ
+                <input name="depart" type="date" min={arrival} required />
+              </label>
+              <button className="btn-primary w-full">
+                {busy
+                  ? "Envoi…"
+                  : property.statut_actuel === "occupe"
+                    ? "Indisponible"
+                    : "Envoyer la demande"}
+              </button>
+            </fieldset>
+            <p className="text-sm text-gray-500">
+              La réservation sera effective après confirmation par notre équipe.
+            </p>
+          </form>
+        </section>
+      </div>
+    </main>
   );
 }
