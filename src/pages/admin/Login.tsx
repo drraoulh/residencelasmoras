@@ -1,51 +1,64 @@
-import { Lock } from 'lucide-react';
-import { Link } from 'react-router-dom';
-import logoLasmoras from '../../assets/logo lasmoras.jpeg';
-
+import { useState } from "react";
+import type { FormEvent } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { supabase, configurationError } from "../../lib/supabase";
 export default function Login() {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [message, setMessage] = useState("");
+  const navigate = useNavigate();
+  const submit = async (e: FormEvent) => {
+    e.preventDefault();
+    if (!supabase) {
+      setMessage(configurationError);
+      return;
+    }
+    setBusy(true);
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+    setBusy(false);
+    if (error)
+      setMessage(
+        "Connexion impossible. Vérifiez votre adresse et votre mot de passe.",
+      );
+    else navigate("/admin/dashboard");
+  };
   return (
-    <div className="min-h-screen bg-brand-gray flex flex-col justify-center items-center p-4">
-      <Link to="/" className="mb-10 hover:opacity-90 transition-opacity">
-        <img src={logoLasmoras} alt="Résidence Las Moras" className="h-24 w-auto rounded-xl shadow-md" />
-      </Link>
-      
-      <div className="bg-white w-full max-w-md p-8 sm:p-10 rounded-[2rem] shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-gray-100">
-        <div className="text-center mb-10">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-red-50 text-brand-red rounded-full mb-6">
-            <Lock className="w-8 h-8" />
-          </div>
-          <h1 className="text-3xl font-extrabold text-brand-dark tracking-tight">Espace Admin</h1>
-          <p className="text-gray-500 mt-2 font-medium">Connexion requise pour gérer la plateforme.</p>
-        </div>
-
-        <form className="flex flex-col gap-6">
-          <div>
-            <label className="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-2">Adresse Email</label>
-            <input 
-              type="email" 
-              placeholder="admin@residencelasmoras.com" 
-              className="w-full rounded-xl border-gray-200 bg-gray-50 px-5 py-4 outline-none focus:ring-2 focus:ring-brand-red focus:bg-white transition-all font-medium text-gray-800" 
-              required 
+    <main className="min-h-screen bg-brand-gray flex items-center justify-center p-5">
+      <section className="panel w-full max-w-md space-y-6">
+        <Link to="/">← Retour au site</Link>
+        <h1 className="text-3xl font-bold">Espace de gestion</h1>
+        <p>Connectez-vous avec votre compte administrateur ou gestionnaire.</p>
+        {message && <p role="alert">{message}</p>}
+        <form onSubmit={submit} className="space-y-5">
+          <label>
+            Adresse e-mail
+            <input
+              type="email"
+              autoComplete="username"
+              required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
             />
-          </div>
-          <div>
-            <div className="flex justify-between items-center mb-2">
-              <label className="block text-xs font-bold text-gray-700 uppercase tracking-wide">Mot de passe</label>
-              <a href="#" className="text-xs font-bold text-brand-red hover:underline">Oublié ?</a>
-            </div>
-            <input 
-              type="password" 
-              placeholder="••••••••" 
-              className="w-full rounded-xl border-gray-200 bg-gray-50 px-5 py-4 outline-none focus:ring-2 focus:ring-brand-red focus:bg-white transition-all font-medium text-gray-800" 
-              required 
+          </label>
+          <label>
+            Mot de passe
+            <input
+              type="password"
+              autoComplete="current-password"
+              required
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
             />
-          </div>
-          
-          <Link to="/admin/dashboard" className="w-full bg-brand-red text-white py-4 rounded-xl font-bold text-lg mt-2 hover:bg-red-700 hover:shadow-[0_8px_20px_rgba(213,0,0,0.3)] transition-all duration-300 active:scale-95 text-center">
-            Se Connecter
-          </Link>
+          </label>
+          <button disabled={busy} className="btn-primary w-full">
+            {busy ? "Connexion…" : "Se connecter"}
+          </button>
         </form>
-      </div>
-    </div>
+      </section>
+    </main>
   );
 }
