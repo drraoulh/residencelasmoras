@@ -42,8 +42,14 @@ export default function Messages() {
     else await load();
   };
   return (
-    <section className="max-w-5xl mx-auto space-y-6">
-      <h1 className="text-3xl font-bold">Messages des visiteurs</h1>
+    <section className="admin-page space-y-6">
+      <div>
+        <p className="admin-eyebrow">À L’ÉCOUTE DE VOS VISITEURS</p>
+        <h1>Messages des visiteurs</h1>
+        <p className="admin-description">
+          Chaque échange est le début d’un beau séjour.
+        </p>
+      </div>
       {error && <p role="alert">{error}</p>}
       <button className="btn-secondary" onClick={() => void load()}>
         Actualiser

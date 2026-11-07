@@ -62,9 +62,12 @@ export default function Team() {
     await load();
   };
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
-      <h1 className="text-3xl font-bold">Équipe et accès</h1>
-      <p>
+    <div className="admin-page space-y-6">
+      <div>
+        <p className="admin-eyebrow">LA RÉSIDENCE SE GÈRE ENSEMBLE</p>
+        <h1>Équipe et accès</h1>
+      </div>
+      <p className="admin-description">
         Les gestionnaires gèrent les logements et les réservations. Les
         administrateurs peuvent également ajouter ou retirer des membres.
       </p>

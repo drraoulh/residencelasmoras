@@ -1,3 +1,4 @@
+import { Search, Plus } from "lucide-react";
 import { useState } from "react";
 import type { FormEvent } from "react";
 import type {
@@ -20,6 +21,13 @@ const blank: Logement = {
 };
 export default function ManageLogements() {
   const { logements, loading, error, refresh } = useProperties();
+  const [query, setQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const filtered = logements.filter(
+    (log) =>
+      log.nom.toLocaleLowerCase("fr").includes(query.toLocaleLowerCase("fr")) &&
+      (statusFilter === "all" || log.statut_actuel === statusFilter),
+  );
   const [draft, setDraft] = useState<Logement | null>(null);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
@@ -132,18 +140,24 @@ export default function ManageLogements() {
     setBusy(false);
   };
   return (
-    <div className="max-w-6xl mx-auto space-y-6">
-      <div className="flex flex-wrap justify-between gap-4">
-        <h1 className="text-3xl font-bold">Gestion des logements</h1>
+    <div className="admin-page space-y-6">
+      <div className="admin-page-heading">
+        <div>
+          <p className="admin-eyebrow">VOTRE PARC IMMOBILIER</p>
+          <h1>Gestion des logements</h1>
+          <p className="admin-description">
+            Des espaces qui donnent envie de séjourner.
+          </p>
+        </div>
         <button
           className="btn-primary"
           onClick={() => open(blank)}
           disabled={busy}
         >
-          Ajouter un logement
+          <Plus size={15} /> Ajouter un logement
         </button>
       </div>
-      <p>
+      <p className="admin-description">
         La première photo est l’image principale affichée sur l’accueil, le
         catalogue et la fiche du logement.
       </p>
@@ -338,15 +352,36 @@ export default function ManageLogements() {
           </form>
         </section>
       )}
+      <div className="admin-filterbar">
+        <label className="admin-search">
+          <Search size={17} />
+          <input
+            aria-label="Rechercher un logement"
+            placeholder="Rechercher un logement…"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+          />
+        </label>
+        <select
+          aria-label="Filtrer par disponibilité"
+          value={statusFilter}
+          onChange={(e) => setStatusFilter(e.target.value)}
+        >
+          <option value="all">Tous les statuts</option>
+          <option value="disponible">Disponibles</option>
+          <option value="occupe">Occupés</option>
+          <option value="libere_prochainement">Bientôt disponibles</option>
+        </select>
+        <span className="admin-filter-count">
+          {filtered.length} logement{filtered.length > 1 ? "s" : ""}
+        </span>
+      </div>
       {loading ? (
         <p role="status">Chargement…</p>
       ) : (
         <div className="grid gap-4">
-          {logements.map((log) => (
-            <article
-              key={log.id}
-              className="panel flex flex-wrap items-center gap-5"
-            >
+          {filtered.map((log) => (
+            <article key={log.id} className="panel admin-property-row">
               <img
                 src={log.photos[0]}
                 alt={log.nom}
@@ -384,6 +419,11 @@ export default function ManageLogements() {
               </button>
             </article>
           ))}
+          {!error && logements.length > 0 && filtered.length === 0 && (
+            <p className="panel">
+              Aucun logement ne correspond à votre recherche.
+            </p>
+          )}
           {!error && logements.length === 0 && (
             <p>Aucun logement. Ajoutez votre premier logement.</p>
           )}

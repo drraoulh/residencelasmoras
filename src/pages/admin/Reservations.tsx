@@ -1,3 +1,4 @@
+import { Search, RefreshCw } from "lucide-react";
 import { useEffect, useState } from "react";
 import { supabase } from "../../lib/supabase";
 type Reservation = {
@@ -11,6 +12,8 @@ type Reservation = {
   logements: { nom: string } | null;
 };
 export default function Reservations() {
+  const [query, setQuery] = useState("");
+  const [filter, setFilter] = useState("all");
   const [rows, setRows] = useState<Reservation[]>([]);
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
@@ -46,18 +49,54 @@ export default function Reservations() {
     if (!error) await load();
     setBusy(false);
   };
+  const filtered = rows.filter(
+    (row) =>
+      `${row.client_nom} ${row.logements?.nom ?? ""}`
+        .toLocaleLowerCase("fr")
+        .includes(query.toLocaleLowerCase("fr")) &&
+      (filter === "all" || row.statut_reservation === filter),
+  );
   return (
-    <div className="space-y-6">
-      <h1 className="text-3xl font-bold">Demandes de réservation</h1>
-      <p>
+    <div className="admin-page space-y-6">
+      <div>
+        <p className="admin-eyebrow">LES SÉJOURS DE VOS CLIENTS</p>
+        <h1>Demandes de réservation</h1>
+      </div>
+      <p className="admin-description">
         Le statut confirme le suivi de la demande. Vérifiez les dates avant de
         confirmer et mettez à jour la disponibilité du logement séparément.
       </p>
       {message && <p role="status">{message}</p>}
       <button className="btn-secondary" onClick={() => void load()}>
-        Actualiser
+        <RefreshCw size={14} /> Actualiser
       </button>
-      {rows.map((r) => (
+      <div className="admin-filterbar">
+        <label className="admin-search">
+          <Search size={17} />
+          <input
+            aria-label="Rechercher une réservation"
+            placeholder="Un client, un logement…"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+          />
+        </label>
+        <select
+          aria-label="Filtrer les réservations"
+          value={filter}
+          onChange={(e) => setFilter(e.target.value)}
+        >
+          <option value="all">Tous les statuts</option>
+          <option value="demande">En attente</option>
+          <option value="confirmee">Confirmées</option>
+          <option value="en_cours">En cours</option>
+          <option value="terminee">Terminées</option>
+          <option value="annulee">Annulées</option>
+        </select>
+        <span className="admin-filter-count">
+          {filtered.length} résultat{filtered.length > 1 ? "s" : ""}
+        </span>
+      </div>
+      {filtered.map((r) => (
         <article
           className="panel flex flex-wrap gap-5 justify-between"
           key={r.id}
@@ -88,6 +127,11 @@ export default function Reservations() {
           </label>
         </article>
       ))}
+      {rows.length > 0 && filtered.length === 0 && (
+        <p className="panel">
+          Aucune réservation ne correspond à votre recherche.
+        </p>
+      )}
       {!rows.length && !message && <p>Aucune demande.</p>}
     </div>
   );
