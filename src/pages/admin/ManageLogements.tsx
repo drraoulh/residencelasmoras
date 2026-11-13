@@ -4,7 +4,7 @@ import type { FormEvent } from "react";
 import type {
   Logement,
   LogementStatus,
-} from "../../components/properties/LogementCard";
+} from "../../types/adminLogement";
 import { useProperties } from "../../context/Properties";
 import { supabase } from "../../lib/supabase";
 import { toLogementRow } from "../../lib/logements";

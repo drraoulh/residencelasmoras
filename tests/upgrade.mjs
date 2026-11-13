@@ -104,7 +104,71 @@ assert.equal(
   (await db.query("select * from public.reservations")).rows.length,
   0,
 );
+await db.exec("reset role");
+await db.exec(
+  load("../supabase/migrations/20261113064920_restore_public_booking_flow.sql"),
+);
+await db.exec(
+  "insert into public.logements(nom,type,prix,photos) values('WhatsApp Studio','Studio',12500,array['cover.jpg'])",
+);
+const bookingProperty = (
+  await db.query("select id from public.logements where nom='WhatsApp Studio'")
+).rows[0].id;
+const makeRequest = `select public.create_reservation_request('${bookingProperty}','Voyageur','visitor@example.com','+237600000000',current_date+10,current_date+12) as request`;
+await as("anon");
+const firstRequest = (await db.query(makeRequest)).rows[0].request;
+const secondRequest = (await db.query(makeRequest)).rows[0].request;
+assert.match(firstRequest.confirmToken, /^[a-f0-9]{32}$/);
+assert.equal(
+  (await db.query("select * from public.get_availability_slots()")).rows.length,
+  0,
+);
+await denied("select client_email from public.reservations");
+await denied(
+  `select public.confirm_reservation_by_token('${firstRequest.id}','${firstRequest.confirmToken}')`,
+);
+await denied(
+  `select public.create_reservation_request('${bookingProperty}','X','invalid','1',current_date+10,current_date+12)`,
+);
+await as("authenticated", outsider);
+assert.equal(
+  (
+    await db.query(
+      `select public.confirm_reservation_by_token('${firstRequest.id}','${firstRequest.confirmToken}') as confirmed`,
+    )
+  ).rows[0].confirmed,
+  false,
+);
+await as("authenticated", admin);
+assert.equal(
+  (
+    await db.query(
+      `select public.confirm_reservation_by_token('${firstRequest.id}','${firstRequest.confirmToken}') as confirmed`,
+    )
+  ).rows[0].confirmed,
+  true,
+);
+assert.equal(
+  (
+    await db.query(
+      `select montant_total from public.reservations where id='${firstRequest.id}'`,
+    )
+  ).rows[0].montant_total,
+  "25000",
+);
+await denied(
+  `select public.confirm_reservation_by_token('${secondRequest.id}','${secondRequest.confirmToken}')`,
+);
+await as("anon");
+const slots = (await db.query("select * from public.get_availability_slots()"))
+  .rows;
+assert.equal(slots.length, 1);
+assert.deepEqual(
+  Object.keys(slots[0]).sort(),
+  ["logement_id", "date_arrivee", "date_depart", "statut_reservation"].sort(),
+);
+await denied(makeRequest);
 await db.close();
 console.log(
-  "PASS existing schema upgrade: history and payments preserved, server pricing, private reservations, membership, storage, image order and revocation",
+  "PASS restored public booking: private availability projection, server prices and tokens, team-only confirmation, overlapping confirmations rejected",
 );

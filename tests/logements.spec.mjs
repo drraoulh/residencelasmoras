@@ -102,10 +102,10 @@ test("photos cohérentes et confirmation de suppression", async ({ page }) => {
     await page.getByAltText("Studio de test").getAttribute("src"),
     selected,
   );
-  await page.getByRole("link", { name: "Voir détails" }).click();
+  await page.getByRole("link", { name: "Voir les détails" }).click();
   assert.equal(
     await page
-      .getByAltText("Studio de test", { exact: true })
+      .getByAltText(/Studio de test — vue/).first()
       .getAttribute("src"),
     selected,
   );

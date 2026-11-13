@@ -64,6 +64,11 @@ async function setup(page) {
           client_telephone: "+237 699 999 999",
           date_arrivee: "2026-11-10",
           date_depart: "2026-11-15",
+          nombre_nuits: 5,
+          montant_total: 100000,
+          montant_paye: 25000,
+          methode_paiement: "espece",
+          statut_paiement: "acompte",
           statut_reservation: "demande",
           logements: { nom: "Appartement Horizon" },
         },
@@ -99,6 +104,10 @@ for (const width of [320, 390, 768, 1440])
       "messages",
       "equipe",
       "compte",
+      "galerie",
+      "disponibilites",
+      "rapports",
+      "contacts",
     ]) {
       await page.goto(`http://localhost:5187/admin/${route}`);
       await expect(page.locator("#admin-content h1")).toBeVisible();

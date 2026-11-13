@@ -32,9 +32,13 @@ Le frontend doit être publié avec les variables publiques du bon projet. La co
 ## Avis Supabase restants
 
 - `app_secrets` : absence de politique volontaire pour une table de secrets.
-- Fonction `confirm_reservation_by_token` : accès public privilégié conservé pour les liens secrets ; jeton strictement validé.
+- Fonction `confirm_reservation_by_token` : confirmation réservée aux membres connectés ; contrôle du jeton et des conflits de dates.
 - Protection des mots de passe compromis désactivée : réglage Auth à activer si disponible.
 
 Liens de référence :
 - [Fonctions privilégiées exposées](https://supabase.com/docs/guides/database/database-linter?lint=0028_anon_security_definer_function_executable)
 - [Protection des mots de passe](https://supabase.com/docs/guides/auth/password-security#password-strength-and-leaked-password-protection)
+
+## Restauration des parcours publics
+
+La migration `restore_public_booking_flow` a été appliquée le 13 novembre 2026. Les visiteurs peuvent consulter une projection minimale des disponibilités et créer une demande avec un tarif calculé côté serveur. L’accès direct aux réservations reste refusé ; les confirmations nécessitent un membre de l’équipe. Les tests SQL couvrent les montants, la confidentialité, le rôle requis et les confirmations qui se chevauchent.

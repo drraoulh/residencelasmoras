@@ -989,3 +989,24 @@
 .admin-shell .admin-property-row > div {
   min-width: 0;
 }
+/* Keep the modern admin typography isolated from the restored public identity. */
+.admin-shell h1,
+.admin-shell h2,
+.admin-shell h3,
+.admin-shell h4,
+.admin-login h1 {
+  font-family: var(--font-sans);
+}
+.admin-shell .btn-primary,
+.admin-login .btn-primary {
+  background: #d50000;
+}
+.admin-shell .btn-primary:hover,
+.admin-login .btn-primary:hover {
+  background: #b90000;
+}
+
+.admin-sidebar,
+.admin-drawer-inner {
+  overflow-y: auto;
+}

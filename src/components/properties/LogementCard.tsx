@@ -1,144 +1,134 @@
-import { Link } from "react-router-dom";
-
-export type LogementStatus = "disponible" | "occupe" | "libere_prochainement";
-
-export interface Logement {
-  id: string;
-  nom: string;
-  type: string;
-  description?: string;
-  surface: number;
-  prix_nuit: number;
-  statut_actuel: LogementStatus;
-  date_liberation?: string;
-  photos: string[];
-  equipements: string[];
-}
+import { Link } from 'react-router-dom';
+import type { Logement } from '../../types';
+import type { AvailabilityResult } from '../../utils/availability';
+import { formatDateFr } from '../../utils/availability';
+import LogementActions from '../ui/LogementActions';
+import { getLogementPhoto } from '../../utils/logementPhoto';
 
 interface LogementCardProps {
   logement: Logement;
+  availability?: AvailabilityResult;
+  arrivee?: string;
+  depart?: string;
 }
 
-export default function LogementCard({ logement }: LogementCardProps) {
+export default function LogementCard({
+  logement,
+  availability,
+  arrivee,
+  depart,
+}: LogementCardProps) {
+  const hasDateSearch = Boolean(arrivee);
+  const isUnavailableByStatut =
+    logement.statut === 'occupe' || logement.statut === 'maintenance';
+  const statusLabel = logement.statut === 'maintenance' ? 'Maintenance' : 'Occupé';
+  const tags = logement.equipements ?? [];
+
+  const isAvailableForDates = availability?.available ?? !isUnavailableByStatut;
+
+  const detailParams = new URLSearchParams();
+  if (arrivee) detailParams.set('arrivee', arrivee);
+  if (depart) detailParams.set('depart', depart);
+  const detailUrl = `/logements/${logement.id}${detailParams.toString() ? `?${detailParams}` : ''}`;
   return (
-    <div className="premium-card flex h-full flex-col bg-white group">
-      {/* Container de l'image avec gestion des statuts */}
-      <div className="relative h-56 w-full overflow-hidden sm:h-64">
+    <article className="group overflow-hidden rounded-2xl border border-stone-200/60 bg-white transition hover:shadow-[0_8px_30px_rgba(0,0,0,0.06)]">
+      <Link to={detailUrl} className="relative block h-52 overflow-hidden sm:h-56">
         <img
-          src={logement.photos[0]}
-          loading="lazy"
+          src={getLogementPhoto(logement.photos, logement.id)}
           alt={logement.nom}
-          className={`w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 ${
-            logement.statut_actuel === "occupe"
-              ? "brightness-50 grayscale-[20%]"
-              : ""
+          width={448}
+          height={224}
+          loading="lazy"
+          decoding="async"
+          className={`h-full w-full object-cover transition duration-700 group-hover:scale-105 ${
+            hasDateSearch
+              ? !isAvailableForDates
+                ? 'opacity-75'
+                : ''
+              : isUnavailableByStatut
+                ? 'opacity-60 grayscale'
+                : ''
           }`}
         />
 
-        {/* Badges de statut (Disponible & Libéré prochainement) */}
-        <div className="absolute right-3 top-3 z-10 flex max-w-[85%] flex-col items-end gap-2 sm:right-4 sm:top-4">
-          {logement.statut_actuel === "disponible" && (
-            <span className="flex items-center gap-2 rounded-full bg-green-500 bg-opacity-90 px-3 py-1.5 text-xs font-semibold text-white shadow-lg backdrop-blur-md sm:px-4 sm:text-sm">
-              <span className="w-2 h-2 rounded-full bg-white animate-pulse"></span>
+        {hasDateSearch ? (
+          isAvailableForDates ? (
+            <span className="absolute left-3 top-3 rounded-full bg-green-50 px-3 py-1 text-[11px] font-medium text-green-700 ring-1 ring-green-100">
               Disponible
             </span>
-          )}
-          {logement.statut_actuel === "libere_prochainement" &&
-            logement.date_liberation && (
-              <span className="rounded-full bg-orange-500 bg-opacity-90 px-3 py-1.5 text-right text-xs font-semibold text-white shadow-lg backdrop-blur-md sm:px-4 sm:text-sm">
-                Dispo à partir du :{" "}
-                {new Date(logement.date_liberation).toLocaleDateString(
-                  "fr-FR",
-                  {
-                    day: "2-digit",
-                    month: "short",
-                    year: "numeric",
-                  },
-                )}
+          ) : (
+            <span className="absolute right-3 top-3 rounded-full bg-amber-50 px-3 py-1 text-[11px] font-medium text-amber-800 ring-1 ring-amber-100">
+              {availability?.reason ?? 'Indisponible'}
+            </span>
+          )
+        ) : (
+          <>
+            {logement.statut === 'disponible' && (
+              <span className="absolute left-3 top-3 rounded-full glass px-3 py-1 text-[11px] font-medium text-brand-dark">
+                Disponible
               </span>
             )}
-        </div>
-
-        {/* Bandeau OCCUPÉ barrant l'image */}
-        {logement.statut_actuel === "occupe" && (
-          <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
-            {/* Conteneur rotatif pour le bandeau */}
-            <div className="transform -rotate-45 w-[150%] flex justify-center shadow-2xl">
-              <div className="w-full border-y-4 border-red-800 bg-brand-red bg-opacity-90 py-2 text-center text-xl font-black uppercase tracking-[0.25em] text-white sm:py-3 sm:text-2xl sm:tracking-[0.3em]">
-                Occupé
-              </div>
-            </div>
-          </div>
+            {isUnavailableByStatut && (
+              <span className="absolute right-3 top-3 rounded-full bg-stone-900/60 px-3 py-1 text-[11px] font-medium text-white backdrop-blur-md">
+                {statusLabel}
+              </span>
+            )}
+          </>
         )}
-      </div>
+      </Link>
 
-      {/* Informations du logement */}
-      <div className="flex flex-1 flex-col justify-between p-4 sm:p-6">
-        <div>
-          <div className="flex justify-between items-start mb-2">
-            <div>
-              <p className="text-sm text-gray-500 font-medium mb-1 uppercase tracking-wider">
-                {logement.type}
-                {logement.surface > 0 ? ` • ${logement.surface} m²` : ""}
-              </p>
-              <h3 className="line-clamp-2 text-lg font-bold leading-tight text-brand-dark sm:text-xl">
-                {logement.nom}
-              </h3>
-            </div>
-          </div>
+      <div className="p-5">
+        <p className="text-[11px] uppercase tracking-widest text-brand-muted">
+          {logement.type}
+          {logement.surface ? ` · ${logement.surface} m²` : ''}
+        </p>
+        <Link to={detailUrl}>
+          <h3 className="mt-1 text-lg font-medium text-brand-dark transition group-hover:text-brand-red">
+            {logement.nom}
+          </h3>
+        </Link>
+        <p className="mt-2 line-clamp-2 text-sm leading-relaxed text-brand-muted">
+          {logement.description}
+        </p>
 
-          {/* Liste des équipements (Aperçu) */}
-          <div className="mt-4 flex flex-wrap gap-2">
-            {logement.equipements.slice(0, 3).map((eq, index) => (
+        {hasDateSearch && !isAvailableForDates && availability?.nextAvailableFrom && (
+          <p className="mt-3 rounded-xl bg-brand-gray px-3 py-2 text-xs text-brand-muted">
+            Disponible à partir du {formatDateFr(availability.nextAvailableFrom)}
+          </p>
+        )}
+
+        {tags.length > 0 && (
+          <div className="mt-3 flex flex-wrap gap-1.5">
+            {tags.slice(0, 3).map((tag) => (
               <span
-                key={index}
-                className="text-xs bg-gray-100 text-gray-600 px-2.5 py-1 rounded-md font-medium border border-gray-200"
+                key={tag}
+                className="rounded-full border border-stone-200/80 px-2.5 py-0.5 text-[11px] text-brand-muted"
               >
-                {eq}
+                {tag}
               </span>
             ))}
-            {logement.equipements.length > 3 && (
-              <span className="text-xs bg-gray-50 text-gray-500 px-2 py-1 rounded-md">
-                +{logement.equipements.length - 3}
-              </span>
-            )}
           </div>
-        </div>
+        )}
 
-        {/* Prix et bouton d'action */}
-        <div className="mt-6 flex flex-col gap-4 border-t border-gray-100 pt-4 sm:flex-row sm:items-end sm:justify-between">
-          <div className="flex flex-col">
-            <span className="text-xs text-gray-500 font-medium mb-0.5">
-              À partir de
-            </span>
-            <div className="flex items-baseline gap-1">
-              <span className="text-xl font-extrabold text-brand-red sm:text-2xl">
-                {logement.prix_nuit.toLocaleString("fr-FR")}
-              </span>
-              <span className="text-sm font-bold text-brand-red">FCFA</span>
-              <span className="text-sm text-gray-400 font-medium ml-1">
-                / nuit
-              </span>
-            </div>
-          </div>
+        <div className="mt-5 border-t border-stone-100 pt-4">
+          <p className="text-xl font-medium text-brand-dark">
+            {logement.prix.toLocaleString('fr-FR')}
+            <span className="ml-1 text-xs text-brand-muted">FCFA / nuit</span>
+          </p>
 
-          {logement.statut_actuel === "occupe" ? (
-            <button
-              className="w-full cursor-not-allowed rounded-xl bg-gray-100 px-5 py-2.5 font-semibold text-gray-400 sm:w-auto"
-              disabled
-            >
-              Indisponible
-            </button>
-          ) : (
-            <Link
-              to={`/logements/${logement.id}`}
-              className="w-full rounded-xl bg-brand-dark px-5 py-2.5 text-center font-semibold text-white transition-all duration-300 hover:bg-black hover:shadow-lg active:scale-95 sm:w-auto"
-            >
-              Voir détails
-            </Link>
-          )}
+          <LogementActions
+            className="mt-3"
+            logementId={logement.id}
+            logementNom={logement.nom}
+            logementType={logement.type}
+            prixParNuit={logement.prix}
+            detailUrl={detailUrl}
+            arrivee={arrivee}
+            depart={depart}
+            showReserve={!hasDateSearch || isAvailableForDates}
+          />
         </div>
       </div>
-    </div>
+    </article>
   );
 }

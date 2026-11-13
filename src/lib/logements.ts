@@ -1,4 +1,4 @@
-import type { Logement } from "../components/properties/LogementCard";
+import type { Logement } from "../types/adminLogement";
 export type LogementRow = {
   id: string;
   nom: string;

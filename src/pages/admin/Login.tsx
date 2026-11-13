@@ -4,7 +4,7 @@ import residence from "../../assets/residencelasmoras1.jpeg";
 import "../../admin.css";
 import { useState } from "react";
 import type { FormEvent } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { supabase, configurationError } from "../../lib/supabase";
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -12,6 +12,7 @@ export default function Login() {
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
   const navigate = useNavigate();
+  const [params] = useSearchParams();
   const submit = async (e: FormEvent) => {
     e.preventDefault();
     if (!supabase) {
@@ -28,7 +29,17 @@ export default function Login() {
       setMessage(
         "Connexion impossible. Vérifiez votre adresse et votre mot de passe.",
       );
-    else navigate("/admin/dashboard");
+    else {
+      const next = params.get("redirect");
+      navigate(
+        next &&
+          /^\/confirmer\/[0-9a-f-]{36}\?token=[a-zA-Z0-9_-]{16,128}$/i.test(
+            next,
+          )
+          ? next
+          : "/admin/dashboard",
+      );
+    }
   };
   return (
     <main className="admin-login">

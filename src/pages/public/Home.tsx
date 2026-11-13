@@ -1,250 +1,316 @@
-import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
-import { Car, Search, ShieldCheck, Wifi, Wind } from "lucide-react";
-import LogementCard from "../../components/properties/LogementCard";
-import { useProperties } from "../../context/Properties";
-import lamorasResidence from "../../assets/lamorasresidence.jpeg";
-import lasmoras from "../../assets/lasmoras.jpeg";
-import lasmorasResidence from "../../assets/lasmorasresidence.jpeg";
-import residenceLasMoras from "../../assets/residencelasmoras.jpeg";
-import residenceLasMoras1 from "../../assets/residencelasmoras1.jpeg";
-import residenceLasMoras2 from "../../assets/residencelasmoras2.jpeg";
-import residenceLasMoras3 from "../../assets/residencelasmoras3.jpeg";
-import vueResidence from "../../assets/Vue residence.jpeg";
+import { lazy, Suspense } from 'react';
+import { Link } from 'react-router-dom';
+import { ArrowRight, Car, CarFront, ShieldCheck, Tv, Wifi, Wind } from 'lucide-react';
+import PageHeroHeading from '../../components/ui/PageHeroHeading';
+import FaqSection from '../../components/ui/FaqSection';
+import GoogleReviews from '../../components/ui/GoogleReviews';
+import { faqItems } from '../../data/faq';
+import LogementCard from '../../components/properties/LogementCard';
+import { useLogementsList } from '../../hooks/useLogementsList';
+import { usePageMeta } from '../../hooks/usePageMeta';
+import { PAGE_SEO } from '../../config/seo';
+import { buildLodgingBusinessJsonLd } from '../../components/seo/SeoJsonLd';
+import { STATIC_IMAGES } from '../../config/staticAssets';
+import { pickFeaturedLogementsByType } from '../../utils/logements';
+import { WHATSAPP_LINK } from '../../utils/whatsapp';
+import vueResidence from '../../assets/Vue residence.jpeg';
 
-const heroSlides = [
-  vueResidence,
-  residenceLasMoras,
-  residenceLasMoras1,
-  residenceLasMoras2,
-  residenceLasMoras3,
-  lasmorasResidence,
-  lamorasResidence,
-  lasmoras,
-];
+const HeroSearchBar = lazy(() => import('../../components/search/HeroSearchBar'));
+
+const HERO_IMAGE = STATIC_IMAGES.hero;
+const welcomeGalleryPreview = STATIC_IMAGES.galleryPreview.map((item, index) => ({
+  id: `preview-${index + 1}`,
+  ...item,
+}));
 
 const services = [
+  { icon: Wifi, title: 'Wi-Fi fibre', description: 'Connexion stable pour travailler et streamer.' },
+  { icon: Tv, title: 'IPTV', description: 'Chaînes TV et divertissement sur grand écran.' },
+  { icon: ShieldCheck, title: 'Sécurité 24/7', description: 'Accès contrôlé et présence sur site.' },
+  { icon: Wind, title: 'Climatisation', description: 'Confort thermique dans chaque logement.' },
   {
-    icon: Wifi,
-    title: "Wifi Haut Débit",
-    text: "Connexion fibre stable pour travailler, streamer et rester joignable.",
+    icon: CarFront,
+    title: 'Location de voitures',
+    description: 'Ville, aéroport et déplacements sur Yaoundé.',
   },
-  {
-    icon: ShieldCheck,
-    title: "Sécurité 24/7",
-    text: "Accès contrôlé, vidéosurveillance et présence sur site jour et nuit.",
-  },
-  {
-    icon: Car,
-    title: "Parking Sécurisé",
-    text: "Stationnement privé et surveillé pour vos véhicules.",
-  },
-  {
-    icon: Wind,
-    title: "Climatisation",
-    text: "Pièces fraîches et confortables avec équipements modernes.",
-  },
+  { icon: Car, title: 'Parking sécurisé', description: 'Stationnement privé et surveillé.' },
 ];
 
-function BookingFields() {
-  return (
-    <form
-      action="/catalogue"
-      className="grid grid-cols-1 gap-4 md:grid-cols-[1fr_1fr_1fr_auto] md:items-end"
-    >
-      <div>
-        <label className="mb-2 block text-xs font-bold uppercase tracking-widest text-gray-500">
-          Arrivée
-        </label>
-        <input
-          type="date"
-          name="arrivee"
-          className="h-12 w-full rounded-lg bg-gray-50 px-4 font-medium text-gray-800 outline-none ring-1 ring-gray-200 transition focus:ring-2 focus:ring-brand-red"
-        />
-      </div>
-      <div>
-        <label className="mb-2 block text-xs font-bold uppercase tracking-widest text-gray-500">
-          Départ
-        </label>
-        <input
-          type="date"
-          name="depart"
-          className="h-12 w-full rounded-lg bg-gray-50 px-4 font-medium text-gray-800 outline-none ring-1 ring-gray-200 transition focus:ring-2 focus:ring-brand-red"
-        />
-      </div>
-      <div>
-        <label className="mb-2 block text-xs font-bold uppercase tracking-widest text-gray-500">
-          Type de logement
-        </label>
-        <select
-          name="type"
-          className="h-12 w-full rounded-lg bg-gray-50 px-4 font-medium text-gray-800 outline-none ring-1 ring-gray-200 transition focus:ring-2 focus:ring-brand-red"
-        >
-          <option value="Tous">Tous les logements</option>
-          <option>Appartement</option>
-          <option>Studio</option>
-          <option>Villa</option>
-          <option>Chambre</option>
-        </select>
-      </div>
-      <button
-        type="submit"
-        className="inline-flex h-12 items-center justify-center gap-2 rounded-lg bg-brand-red px-8 font-bold text-white transition hover:bg-red-700 hover:shadow-lg active:scale-95"
-      >
-        <Search className="h-5 w-5" />
-        Réserver
-      </button>
-    </form>
-  );
-}
-
 export default function Home() {
-  const { logements, loading, error } = useProperties();
-  const [currentImageIndex, setCurrentImageIndex] = useState(0);
-
-  useEffect(() => {
-    const timer = window.setInterval(() => {
-      setCurrentImageIndex((current) => (current + 1) % heroSlides.length);
-    }, 5000);
-
-    return () => window.clearInterval(timer);
-  }, []);
+  const { logements, isLoading, error } = useLogementsList();
+  usePageMeta({
+    ...PAGE_SEO.home,
+    jsonLd: buildLodgingBusinessJsonLd(),
+  });
+  const display = pickFeaturedLogementsByType(logements, 3);
 
   return (
-    <main className="min-h-screen bg-white">
-      <section className="relative flex h-[78svh] min-h-[520px] items-center justify-center overflow-hidden md:h-[85vh] md:min-h-[640px] md:overflow-visible">
-        <div className="absolute inset-0">
-          {heroSlides.map((slide, index) => (
-            <div
-              key={slide}
-              className={`absolute inset-0 bg-cover bg-center transition-opacity duration-1000 ease-in-out ${
-                index === currentImageIndex ? "opacity-100" : "opacity-0"
-              }`}
-              style={{ backgroundImage: `url(${slide})` }}
-              aria-hidden={index !== currentImageIndex}
+    <main className="overflow-x-hidden bg-brand-white">
+      {/* ── Hero plein écran — texte en bas, recherche en carte flottante ── */}
+      <section className="relative min-h-[72dvh] min-[480px]:min-h-[80dvh] lg:min-h-svh">
+        <img
+          src={HERO_IMAGE}
+          alt="LAS MORAS — L'Art de Vivre Naturellement"
+          width={1920}
+          height={1280}
+          fetchPriority="high"
+          decoding="async"
+          className="absolute inset-0 h-full w-full object-cover object-[center_30%] sm:object-center"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-stone-950/95 via-stone-900/50 to-stone-900/15 sm:from-stone-950/90 sm:via-stone-900/35" />
+        <div className="absolute inset-0 bg-gradient-to-r from-stone-950/60 via-stone-950/20 to-transparent sm:from-stone-950/50" />
+
+        <div className="relative z-10 mx-auto flex min-h-[72dvh] max-w-6xl flex-col justify-end px-4 pb-8 pt-24 min-[480px]:min-h-[80dvh] min-[480px]:pb-10 sm:px-6 sm:pt-28 lg:min-h-svh lg:pb-40 lg:pt-32">
+          <div className="w-full max-w-xl border-l-2 border-brand-red pl-4 sm:max-w-2xl sm:pl-6">
+            <PageHeroHeading
+              label="Résidence meublée · Yaoundé"
+              brand
+              variant="light"
+              subtitle="Appartements meublés de standing, chaque espace une destination."
             />
-          ))}
-          <div className="absolute inset-0 bg-black/40" />
-        </div>
-
-        <div className="relative z-10 mx-auto max-w-5xl px-4 text-center text-white">
-          <p className="mb-4 text-xs font-bold uppercase tracking-[0.22em] text-white/85 sm:text-sm sm:tracking-[0.28em]">
-            Résidence Las Moras
-          </p>
-          <h1 className="text-3xl font-extrabold leading-tight drop-shadow-2xl sm:text-4xl md:text-6xl">
-            Votre séjour d'exception à Yaoundé
-          </h1>
-          <p className="mx-auto mt-5 max-w-3xl text-base font-medium leading-relaxed text-gray-100 sm:text-lg md:text-2xl">
-            Appartements meublés de standing, service attentif et confort
-            premium pour vos séjours d'affaires ou en famille.
-          </p>
-        </div>
-
-        <div className="absolute bottom-8 z-20 flex items-center justify-center gap-2 px-4 md:bottom-24 md:gap-3">
-          {heroSlides.map((_, index) => (
-            <button
-              key={index}
-              type="button"
-              onClick={() => setCurrentImageIndex(index)}
-              className={`h-2.5 rounded-full transition-all duration-300 ${
-                index === currentImageIndex
-                  ? "w-8 bg-white"
-                  : "w-2.5 bg-white/50 hover:bg-white/80"
-              }`}
-              aria-label={`Afficher l'image ${index + 1}`}
-            />
-          ))}
-        </div>
-
-        <div className="absolute bottom-0 z-20 hidden w-full translate-y-1/2 px-4 md:block">
-          <div className="mx-auto max-w-6xl rounded-lg bg-white p-5 shadow-2xl">
-            <BookingFields />
+            <div className="mt-5 flex flex-col gap-2.5 min-[400px]:flex-row min-[400px]:flex-wrap min-[400px]:items-center sm:mt-7 sm:gap-3">
+              <Link to="/catalogue" className="btn-accent w-full min-[400px]:w-auto">
+                Nos logements
+                <ArrowRight className="h-4 w-4" />
+              </Link>
+              <Link to="/a-propos" className="btn-glass w-full min-[400px]:w-auto">
+                En savoir plus
+                <ArrowRight className="h-4 w-4" />
+              </Link>
+            </div>
           </div>
         </div>
       </section>
 
-      <section className="relative z-20 bg-white px-4 py-6 md:hidden">
-        <div className="mx-auto max-w-md rounded-lg bg-white p-4 shadow-2xl ring-1 ring-gray-100">
-          <BookingFields />
+      <section className="relative z-20 px-3 pb-6 pt-4 sm:px-6 sm:pb-8 md:-mt-20 md:pt-0 lg:-mt-28">
+        <div className="mx-auto w-full max-w-4xl rounded-xl border border-stone-200/80 bg-white p-1 shadow-[0_16px_48px_rgba(0,0,0,0.1)] sm:rounded-2xl sm:p-1.5 sm:shadow-[0_24px_64px_rgba(0,0,0,0.12)]">
+          <Suspense
+            fallback={
+              <div className="rounded-xl bg-brand-gray/50 p-8 text-center text-sm text-brand-muted">
+                Chargement de la recherche…
+              </div>
+            }
+          >
+            <HeroSearchBar />
+          </Suspense>
         </div>
       </section>
 
-      <section className="bg-white px-4 pb-16 pt-12 text-center md:pb-24 md:pt-44">
-        <div className="mx-auto max-w-4xl">
-          <p className="mb-4 text-sm font-bold uppercase tracking-[0.25em] text-brand-red">
-            Bienvenue
-          </p>
-          <h2 className="text-2xl font-extrabold leading-tight text-brand-dark sm:text-3xl md:text-5xl">
-            L'Excellence au cœur de la ville
-          </h2>
-          <p className="mt-6 text-base leading-relaxed text-gray-600 md:mt-8 md:text-xl">
-            Profitez d'appartements meublés élégants, pensés pour offrir le
-            confort d'un hôtel premium avec l'intimité d'une résidence privée.
-            Chaque logement combine espace, standing et équipements modernes.
-          </p>
-        </div>
-      </section>
-
-      <section className="bg-white px-4 py-16 md:py-20">
-        <div className="mx-auto max-w-7xl">
-          <div className="mb-10 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-            <div>
-              <p className="mb-2 text-sm font-bold uppercase tracking-[0.25em] text-brand-red">
-                Sélection
-              </p>
-              <h2 className="text-2xl font-extrabold text-brand-dark sm:text-3xl md:text-4xl">
-                Nos Coups de Cœur
-              </h2>
-            </div>
-            <Link
-              to="/catalogue"
-              className="font-bold text-brand-red transition hover:text-red-700"
-            >
-              Voir tout le catalogue
+      {/* ── Intro ── */}
+      <section className="px-4 py-16 sm:px-6 sm:py-20 lg:py-24">
+        <div className="mx-auto grid max-w-6xl items-center gap-10 lg:grid-cols-2 lg:gap-16">
+          <div>
+            <p className="section-label">Bienvenue</p>
+            <h2 className="section-title mt-3">
+              Confort d'hôtel,
+              <br />
+              intimité d'une résidence
+            </h2>
+            <p className="mt-5 text-sm leading-relaxed text-brand-muted sm:text-base">
+              LAS MORAS — L'Art de Vivre Naturellement — propose des appartements entièrement meublés à Yaoundé, décorés selon
+              des thèmes inspirés des plus belles destinations — Cappadocia, Cancun, Galápagos
+              et plus encore.
+            </p>
+            <Link to="/a-propos" className="btn-ghost mt-8 text-xs">
+              Notre histoire
+              <ArrowRight className="h-3.5 w-3.5" />
             </Link>
           </div>
 
-          {loading && <p role="status">Chargement…</p>}
-          {error && <p role="alert">{error}</p>}
-          {!loading && !error && logements.length === 0 && (
-            <p>Nos logements seront bientôt disponibles.</p>
-          )}
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 lg:gap-8">
-            {logements.slice(0, 3).map((logement) => (
-              <LogementCard key={logement.id} logement={logement} />
+          <div className="grid grid-cols-2 gap-3 sm:gap-4">
+            {welcomeGalleryPreview[0] && (
+              <Link
+                to="/galerie"
+                className="group relative col-span-2 row-span-2 min-h-[200px] overflow-hidden rounded-2xl ring-1 ring-stone-200/60 sm:min-h-[280px] lg:col-span-1 lg:row-span-2 lg:min-h-[320px]"
+              >
+                <img
+                  src={welcomeGalleryPreview[0].src}
+                  alt={welcomeGalleryPreview[0].label}
+                  width={800}
+                  height={600}
+                  loading="lazy"
+                  decoding="async"
+                  className="absolute inset-0 h-full w-full object-cover transition duration-700 group-hover:scale-[1.04]"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-stone-950/75 via-stone-950/15 to-transparent" />
+                <div className="absolute bottom-0 left-0 right-0 p-4 sm:p-5">
+                  <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-brand-red">
+                    {welcomeGalleryPreview[0].category}
+                  </span>
+                  <p className="mt-1 font-heading text-lg font-medium text-white">
+                    {welcomeGalleryPreview[0].label}
+                  </p>
+                </div>
+              </Link>
+            )}
+            {welcomeGalleryPreview[1] && (
+              <Link
+                to="/galerie"
+                className="group relative min-h-[140px] overflow-hidden rounded-2xl ring-1 ring-stone-200/60 sm:min-h-[160px] lg:min-h-[152px]"
+              >
+                <img
+                  src={welcomeGalleryPreview[1].src}
+                  alt={welcomeGalleryPreview[1].label}
+                  width={600}
+                  height={450}
+                  loading="lazy"
+                  decoding="async"
+                  className="absolute inset-0 h-full w-full object-cover transition duration-700 group-hover:scale-[1.04]"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-stone-950/75 via-stone-950/15 to-transparent" />
+                <div className="absolute bottom-0 left-0 right-0 p-3 sm:p-4">
+                  <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-brand-red">
+                    {welcomeGalleryPreview[1].category}
+                  </span>
+                  <p className="mt-0.5 text-sm font-medium text-white">{welcomeGalleryPreview[1].label}</p>
+                </div>
+              </Link>
+            )}
+            <Link
+              to="/galerie"
+              className="group flex min-h-[120px] flex-col items-center justify-center rounded-2xl border border-dashed border-stone-300/90 bg-brand-gray/80 text-center transition hover:border-brand-red/40 hover:bg-brand-red/5 sm:min-h-[140px] lg:min-h-[152px]"
+            >
+              <span className="font-heading text-base font-medium text-brand-dark">Voir la galerie</span>
+              <span className="mt-1 text-xs text-brand-muted">Toutes les photos</span>
+              <ArrowRight className="mt-2 h-4 w-4 text-brand-red transition group-hover:translate-x-0.5" />
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Logements ── */}
+      <section className="border-y border-stone-200/60 bg-brand-gray px-4 py-16 sm:px-6 sm:py-20 lg:py-24">
+        <div className="mx-auto max-w-6xl">
+          <div className="mb-8 flex flex-col gap-3 sm:mb-12 sm:flex-row sm:items-end sm:justify-between">
+            <div className="min-w-0">
+              <p className="section-label">Catalogue</p>
+              <h2 className="section-title mt-2 sm:mt-3">Logements disponibles</h2>
+            </div>
+            <Link
+              to="/catalogue"
+              className="hidden shrink-0 text-sm text-brand-muted transition hover:text-brand-dark sm:block"
+            >
+              Tout voir →
+            </Link>
+          </div>
+
+          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3">
+            {isLoading ? (
+              Array.from({ length: 3 }).map((_, index) => (
+                <div
+                  key={index}
+                  className="h-80 animate-pulse rounded-2xl bg-white ring-1 ring-stone-200/60"
+                />
+              ))
+            ) : error ? (
+              <div className="col-span-full rounded-2xl border border-red-200 bg-red-50 px-5 py-8 text-center text-sm text-brand-red">
+                Impossible de charger les logements pour le moment.
+              </div>
+            ) : (
+              display.map((l) => <LogementCard key={l.id} logement={l} />)
+            )}
+          </div>
+
+          <div className="mt-10 text-center sm:hidden">
+            <Link to="/catalogue" className="btn-ghost text-xs">
+              Voir tout le catalogue
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Services ── */}
+      <section className="px-4 py-16 sm:px-6 sm:py-20 lg:py-24">
+        <div className="mx-auto max-w-6xl">
+          <p className="section-label text-center">Services</p>
+          <h2 className="section-title mt-2 text-center sm:mt-3">Tout pour un séjour sans contrainte</h2>
+          <p className="mx-auto mt-3 max-w-lg px-2 text-center text-sm text-brand-muted sm:px-0">
+            Hébergement, confort et mobilité — location de véhicules pour la ville, l'aéroport et vos
+            courses.
+          </p>
+
+          <div className="mx-auto mt-8 grid max-w-4xl grid-cols-1 gap-3 min-[480px]:grid-cols-2 sm:mt-12 sm:gap-4 lg:grid-cols-3">
+            {services.map(({ icon: Icon, title, description }) => (
+              <div
+                key={title}
+                className="glass-card flex flex-col items-center gap-3 p-5 text-center sm:p-6"
+              >
+                <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-red-50 text-brand-red">
+                  <Icon className="h-5 w-5" strokeWidth={1.5} />
+                </span>
+                <span className="text-sm font-medium text-brand-dark">{title}</span>
+                <span className="text-xs leading-relaxed text-brand-muted">{description}</span>
+              </div>
             ))}
           </div>
         </div>
       </section>
 
-      <section className="bg-gray-50 px-4 py-16 md:py-20">
-        <div className="mx-auto max-w-7xl">
-          <div className="mb-12 text-center">
-            <p className="mb-2 text-sm font-bold uppercase tracking-[0.25em] text-brand-red">
-              Services
-            </p>
-            <h2 className="text-2xl font-extrabold text-brand-dark sm:text-3xl md:text-4xl">
-              Nos Services
-            </h2>
-          </div>
+      {/* ── Avis Google ── */}
+      <section id="avis" className="px-4 py-16 sm:px-6 sm:py-20 lg:py-24">
+        <div className="mx-auto max-w-6xl">
+          <GoogleReviews />
+        </div>
+      </section>
 
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-            {services.map(({ icon: Icon, title, text }) => (
-              <div
-                key={title}
-                className="rounded-lg bg-white p-6 text-center shadow-sm ring-1 ring-gray-100 sm:p-7"
+      {/* ── Citation + image ── */}
+      <section className="relative overflow-hidden">
+        <img
+          src={vueResidence}
+          alt="Vue panoramique — Résidence LAS MORAS"
+          width={1920}
+          height={800}
+          loading="lazy"
+          decoding="async"
+          className="h-56 w-full object-cover object-center min-[400px]:h-72 sm:h-80 md:h-96"
+        />
+        <div className="absolute inset-0 bg-stone-900/50" />
+        <div className="absolute inset-0 flex items-center justify-center p-4 sm:p-6">
+          <div className="glass-on-image w-full max-w-lg px-4 py-4 text-center sm:px-6 sm:py-5">
+            <p className="text-sm font-medium leading-relaxed min-[400px]:text-base sm:text-lg">
+              « Chaque porte ouvre sur une nouvelle destination. »
+            </p>
+            <p className="mt-3 text-xs tracking-widest text-brand-red uppercase">
+              LAS MORAS — L'Art de Vivre Naturellement
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* ── FAQ (aperçu) ── */}
+      <section className="border-t border-stone-200/60 bg-brand-gray px-4 py-16 sm:px-6 sm:py-20 lg:py-24">
+        <div className="mx-auto max-w-6xl">
+          <FaqSection
+            items={faqItems}
+            limit={4}
+            showAllLink
+            description="Les réponses aux questions les plus posées avant de réserver."
+          />
+        </div>
+      </section>
+
+      {/* ── CTA minimal ── */}
+      <section className="px-4 pt-16 pb-12 sm:px-6 sm:pt-20 sm:pb-14 lg:pt-24 lg:pb-14">
+        <div className="mx-auto max-w-6xl">
+          <div className="glass-card flex flex-col items-center justify-between gap-6 p-6 text-center sm:gap-8 sm:p-8 sm:text-left md:flex-row md:p-10">
+            <div className="min-w-0">
+              <p className="section-label">Réserver</p>
+              <h2 className="section-title mt-2">Prêt pour votre séjour ?</h2>
+              <p className="mt-2 text-sm text-brand-muted">
+                Contactez-nous ou parcourez le catalogue en ligne.
+              </p>
+            </div>
+            <div className="flex w-full flex-col gap-2.5 sm:w-auto sm:flex-row sm:gap-3">
+              <Link to="/catalogue" className="btn-accent w-full sm:w-auto">Voir les logements</Link>
+              <a
+                href={WHATSAPP_LINK}
+                target="_blank"
+                rel="noreferrer"
+                className="btn-ghost w-full sm:w-auto"
               >
-                <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-lg bg-red-50 text-brand-red">
-                  <Icon className="h-7 w-7" />
-                </div>
-                <h3 className="text-lg font-extrabold text-brand-dark">
-                  {title}
-                </h3>
-                <p className="mt-3 text-sm leading-relaxed text-gray-600">
-                  {text}
-                </p>
-              </div>
-            ))}
+                WhatsApp
+              </a>
+            </div>
           </div>
         </div>
       </section>

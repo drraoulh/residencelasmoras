@@ -61,6 +61,10 @@ Compiler avec les variables publiques du projet Supabase dans l’environnement 
 ## Limites connues
 
 - Les photos retirées restent dans Storage pour préserver les références ; nettoyer les fichiers orphelins après contrôle.
-- L’API publique de confirmation par jeton est volontairement conservée pour les liens existants ; le jeton est maintenant validé et comparé exactement.
+- Les liens de confirmation par jeton restent valides, avec une connexion de membre de l’équipe obligatoire côté serveur.
 - La table `app_secrets` reste sans politique publique, volontairement inaccessible aux visiteurs.
 - Activer la protection Supabase contre les mots de passe compromis dans les paramètres Auth, selon les possibilités du forfait.
+
+## Site public historique
+
+Les pages et fonctions de la branche historique `feat/whatsapp-confirm-reservation` sont réintégrées dans `main` : avis clients, réseaux sociaux, galerie, recherche et réservation WhatsApp. Voir [le détail de restauration](docs/public-site-restoration.md). La migration `restore_public_booking_flow` fournit les API publiques limitées aux disponibilités et à la création d’une demande sans ouvrir les données clients.

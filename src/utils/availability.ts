@@ -1,0 +1,145 @@
+import type { Logement, Reservation, ReservationStatus } from '../types';
+import { rangesOverlap } from './helpers';
+import { filterActiveBlockingSlots } from './reservationLifecycle';
+
+export type AvailabilitySlot = Pick<
+  Reservation,
+  'logement_id' | 'date_arrivee' | 'date_depart' | 'statut_reservation'
+>;
+
+export interface AvailabilityResult {
+  available: boolean;
+  reason?: 'Maintenance' | 'Réservé' | 'Occupé' | 'Demande en attente';
+  nextAvailableFrom?: string;
+  blockingUntil?: string;
+}
+
+/** Bloque le calendrier public uniquement après confirmation (lien WhatsApp ou admin) */
+export function isBlockingReservation(status: ReservationStatus) {
+  return status === 'confirmee' || status === 'en_cours';
+}
+
+export function formatDateFr(dateStr: string) {
+  return new Date(`${dateStr}T00:00:00`).toLocaleDateString('fr-FR', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  });
+}
+
+export function addDays(dateStr: string, days: number) {
+  const date = new Date(`${dateStr}T00:00:00Z`);
+  date.setUTCDate(date.getUTCDate() + days);
+  return date.toISOString().slice(0, 10);
+}
+
+export function getBlockingSlotsForLogement(logementId: string, slots: AvailabilitySlot[]) {
+  return filterActiveBlockingSlots(slots)
+    .filter((slot) => slot.logement_id === logementId)
+    .sort((a, b) => a.date_arrivee.localeCompare(b.date_arrivee));
+}
+
+export function formatSearchPeriod(dateArrivee: string, dateDepart?: string) {
+  if (!dateDepart) return `À partir du ${formatDateFr(dateArrivee)}`;
+  return `Du ${formatDateFr(dateArrivee)} au ${formatDateFr(dateDepart)}`;
+}
+
+export function getEffectiveDepart(dateArrivee: string, dateDepart?: string) {
+  if (dateDepart && dateDepart > dateArrivee) return dateDepart;
+  return addDays(dateArrivee, 1);
+}
+
+export function getLogementAvailability(
+  logement: Logement,
+  slots: AvailabilitySlot[],
+  dateArrivee: string,
+  dateDepart?: string,
+): AvailabilityResult {
+  if (logement.statut === 'maintenance') {
+    return { available: false, reason: 'Maintenance' };
+  }
+
+  if(logement.statut==='libere_prochainement' && (!logement.date_liberation || dateArrivee<logement.date_liberation)){
+    return {available:false,reason:'Occupé',nextAvailableFrom:logement.date_liberation};
+  }
+  const effectiveDepart = getEffectiveDepart(dateArrivee, dateDepart);
+  const blockingSlots = getBlockingSlotsForLogement(logement.id, slots);
+  if(logement.statut==='occupe' && blockingSlots.length===0)return {available:false,reason:'Occupé'};
+  const conflict = blockingSlots.find((slot) =>
+    rangesOverlap(dateArrivee, effectiveDepart, slot.date_arrivee, slot.date_depart),
+  );
+
+  if (!conflict) {
+    if (logement.statut === 'occupe') {
+      const nextFrom = getNextAvailableArrival(logement, slots, dateArrivee);
+      if (nextFrom && nextFrom <= dateArrivee) {
+        return { available: true };
+      }
+      return {
+        available: false,
+        reason: 'Occupé',
+        nextAvailableFrom: nextFrom ?? undefined,
+        blockingUntil: nextFrom ?? undefined,
+      };
+    }
+    return { available: true };
+  }
+
+  return {
+    available: false,
+    reason: 'Réservé',
+    nextAvailableFrom: conflict.date_depart,
+    blockingUntil: conflict.date_depart,
+  };
+}
+
+export function getUnavailableMessage(result: AvailabilityResult) {
+  if (result.reason === 'Maintenance') {
+    return 'Ce logement est en maintenance sur cette période.';
+  }
+  if (result.nextAvailableFrom) {
+    return `Ces dates sont déjà réservées. Prochaine disponibilité à partir du ${formatDateFr(result.nextAvailableFrom)}.`;
+  }
+  return 'Ces dates ne sont pas disponibles pour ce logement.';
+}
+
+export function getNextAvailableArrival(
+  logement: Logement,
+  slots: AvailabilitySlot[],
+  fromDate: string,
+): string | null {
+  if (logement.statut === 'maintenance') return null;
+
+  let cursor = fromDate;
+  const blockingSlots = getBlockingSlotsForLogement(logement.id, slots);
+
+  for (let day = 0; day < 366; day += 1) {
+    const conflict = blockingSlots.find((slot) =>
+      rangesOverlap(cursor, addDays(cursor, 1), slot.date_arrivee, slot.date_depart),
+    );
+
+    if (!conflict) return cursor;
+
+    const nextCursor = conflict.date_depart > cursor ? conflict.date_depart : addDays(cursor, 1);
+    if (nextCursor === cursor) return addDays(cursor, 1);
+    cursor = nextCursor;
+  }
+
+  return null;
+}
+
+export function buildCatalogueSearchParams({
+  type,
+  arrivee,
+  depart,
+}: {
+  type?: string;
+  arrivee?: string;
+  depart?: string;
+}) {
+  const params = new URLSearchParams();
+  if (type && type !== 'Tous') params.set('type', type);
+  if (arrivee) params.set('arrivee', arrivee);
+  if (depart) params.set('depart', depart);
+  return params;
+}

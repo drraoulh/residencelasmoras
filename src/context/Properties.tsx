@@ -6,7 +6,7 @@ import {
   useCallback,
 } from "react";
 import type { ReactNode } from "react";
-import type { Logement } from "../components/properties/LogementCard";
+import type { Logement } from "../types/adminLogement";
 import { supabase, configurationError } from "../lib/supabase";
 import { fromLogementRow } from "../lib/logements";
 const Context = createContext<{
